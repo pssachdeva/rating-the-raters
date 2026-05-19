@@ -7,9 +7,12 @@ PROVIDER_DISPLAY_NAMES = {
     "google": "Google",
     "deepseek": "DeepSeek",
     "minimax": "MiniMax",
+    "meta": "Meta",
     "moonshotai": "Moonshot AI",
     "openrouter": "OpenRouter",
+    "other": "Other",
     "qwen": "Qwen",
+    "together": "Together AI",
     "xiaomi": "Xiaomi",
     "xai": "xAI",
     "zai": "Z.ai",
@@ -28,6 +31,10 @@ _PROVIDER_PREFIX_TO_SLUG = {
     "openai_": "openai",
     "google_": "google",
     "deepseek_": "deepseek",
+    "moonshot_": "moonshotai",
+    "together_openai_": "openai",
+    "together_meta-llama_": "meta",
+    "together_": "together",
     "xai_": "xai",
 }
 
@@ -55,11 +62,17 @@ _TOKEN_OVERRIDES = {
 
 _MODEL_LABEL_OVERRIDES = {
     "openrouter_deepseek_deepseek-v3.2": "DeepSeek V3.2",
+    "deepseek_deepseek-v4-pro": "DeepSeek V4 Pro",
     "openrouter_minimax_minimax-m2.5": "MiniMax M2.5",
     "openrouter_moonshotai_kimi-k2.5": "Kimi K2.5",
     "openrouter_qwen_qwen3.5-122b-a10b": "Qwen3.5 122B A10B",
     "openrouter_xiaomi_mimo-v2-pro": "MiMo V2 Pro",
     "openrouter_z-ai_glm-5-turbo": "GLM-5 Turbo",
+    "moonshot_kimi-k2.5": "Kimi K2.5",
+    "together_meta-llama_llama-3.3-70b-instruct-turbo": "Llama 3.3 70B",
+    "together_openai_gpt-oss-120b": "GPT-OSS 120B",
+    "google_gemini-3.1-pro-preview_medium": "Gemini 3.1 Pro",
+    "xai_grok-4-1-fast-reasoning": "Grok 4.1",
 }
 
 
