@@ -1,0 +1,33 @@
+name: question_order_reverse_deepseek
+description: |
+  Reverse severity-item order run on the MHS reference set for the direct
+  DeepSeek full-run model.
+
+subset: reference_set
+
+prompt:
+  system_prompt_path: prompts/mhs_survey_v1_reversed_severity_order.txt
+
+async:
+  max_attempts: 2
+  retry_delay_seconds: 2.0
+  concurrency: 6
+
+model:
+  id: deepseek_deepseek-v4-pro
+  provider: deepseek
+  name: deepseek-v4-pro
+  max_tokens: 4096
+  reasoning:
+    effort: high
+  params:
+    thinking:
+      type: enabled
+    response_format:
+      type: json_object
+    stream_options:
+      include_usage: true
+
+batches:
+  run_dir: batches/question_order_reverse_deepseek
+  combined_output_path: data/question_order_reverse_deepseek_processed.csv

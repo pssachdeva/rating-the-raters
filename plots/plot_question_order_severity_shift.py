@@ -9,9 +9,9 @@ from mhs_llms.facets.order_effect_plot import (
 from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
 
 
-ORIGINAL_JUDGES_PATH = FACETS_DIR / "question_order_original_matched" / "judges_scores.csv"
-REVERSE_JUDGES_PATH = FACETS_DIR / "question_order_reverse_matched" / "judges_scores.csv"
-POOLED_ORDER_CONTRAST_PATH = DATA_DIR / "question_order_pooled_effect_order_contrast.csv"
+ORIGINAL_JUDGES_PATH = FACETS_DIR / "full_run_models_reference_set" / "judges_scores.csv"
+REVERSE_JUDGES_PATH = FACETS_DIR / "question_order_full_run_reverse_matched" / "judges_scores.csv"
+POOLED_ORDER_CONTRAST_PATH = DATA_DIR / "question_order_full_run_pooled_effect_order_contrast.csv"
 OUTPUT_PATH = ARTIFACTS_DIR / "question_order_severity_shift.png"
 
 SUBPLOT_ROW_COUNT = 1
@@ -24,7 +24,7 @@ SUBPLOT_WIDTH_RATIOS = [1.6, 0.9]
 SUBPLOT_WSPACE = 0.08
 
 MARKER_FORMAT = "o"
-SEVERITY_CONDITION_Y_OFFSET = 0.11
+SEVERITY_CONDITION_Y_OFFSET = 0.13
 SEVERITY_MARKER_SIZE = 6.4
 SEVERITY_ERROR_COLOR = "#303030"
 SEVERITY_ERROR_CAPSIZE = 2.5
@@ -49,7 +49,8 @@ ODDS_RATIO_NULL_VALUE = 1.0
 ODDS_RATIO_NULL_LINE_COLOR = "#444444"
 ODDS_RATIO_NULL_LINE_WIDTH = 1.0
 ODDS_RATIO_XLABEL = "Change in Odds Ratio"
-ODDS_RATIO_SCALE = "linear"
+ODDS_RATIO_SCALE = "log"
+ODDS_RATIO_X_LIMITS = (0.7, 2.2)
 
 POOLED_BAND_COLOR = "#666666"
 POOLED_BAND_ALPHA = 0.12
@@ -97,9 +98,9 @@ LEGEND_REVERSE_LABEL = "Reverse"
 LEGEND_MARKER_COLOR = "#555555"
 LEGEND_LINE_COORDINATES = [0]
 LEGEND_LINE_COLOR = "none"
-LEGEND_MARKER_SCALE = 1.12
-LEGEND_LOCATION = "lower left"
-LEGEND_FONT_SIZE = 9
+LEGEND_MARKER_SCALE = 1.25
+LEGEND_LOCATION = "upper left"
+LEGEND_FONT_SIZE = 10
 LEGEND_FRAME_ON = True
 
 RIGHT_TICK_STEP = 0.2
@@ -114,7 +115,7 @@ SIGNIFICANCE_MARKER_TEXT_COORDS = "offset points"
 SIGNIFICANCE_MARKER_FONT_SIZE = 10
 SIGNIFICANCE_MARKER_COLOR = "#202020"
 SIGNIFICANCE_MARKER_WEIGHT = "bold"
-SIGNIFICANCE_MARKER_HORIZONTAL_ALIGNMENT = "right"
+SIGNIFICANCE_MARKER_HORIZONTAL_ALIGNMENT = "center"
 SIGNIFICANCE_MARKER_VERTICAL_ALIGNMENT = "center"
 SIGNIFICANCE_MARKER_CLIP_ON = False
 SIGNIFICANCE_MARKER_ZORDER = 4
@@ -160,6 +161,7 @@ ORDER_SHIFT_STYLE = OrderShiftPlotStyle(
     odds_ratio_null_line_width=ODDS_RATIO_NULL_LINE_WIDTH,
     odds_ratio_xlabel=ODDS_RATIO_XLABEL,
     odds_ratio_scale=ODDS_RATIO_SCALE,
+    odds_ratio_x_limits=ODDS_RATIO_X_LIMITS,
     pooled_band_color=POOLED_BAND_COLOR,
     pooled_band_alpha=POOLED_BAND_ALPHA,
     pooled_band_zorder=POOLED_BAND_ZORDER,

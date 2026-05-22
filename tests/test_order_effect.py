@@ -134,6 +134,32 @@ def test_load_order_shift_comparison_requires_same_model_ids(tmp_path: Path) -> 
         load_order_shift_comparison(original_path, reverse_path)
 
 
+def test_load_order_shift_comparison_sorts_closed_then_open_by_size(tmp_path: Path) -> None:
+    original_path = tmp_path / "original_judges.csv"
+    reverse_path = tmp_path / "reverse_judges.csv"
+    rows = [
+        {"facet_label": "together_meta-llama_llama-3.3-70b-instruct-turbo", "measure": 0.1, "s_e": 0.02},
+        {"facet_label": "openai_gpt-5.4_medium", "measure": 0.1, "s_e": 0.02},
+        {"facet_label": "deepseek_deepseek-v4-pro", "measure": 0.1, "s_e": 0.02},
+        {"facet_label": "anthropic_claude-opus-4-6_medium", "measure": 0.1, "s_e": 0.02},
+        {"facet_label": "together_openai_gpt-oss-120b", "measure": 0.1, "s_e": 0.02},
+        {"facet_label": "google_gemini-3.1-pro-preview_medium", "measure": 0.1, "s_e": 0.02},
+    ]
+    pd.DataFrame(rows).to_csv(original_path, index=False)
+    pd.DataFrame(rows).to_csv(reverse_path, index=False)
+
+    comparison = load_order_shift_comparison(original_path, reverse_path)
+
+    assert comparison["display_label"].tolist() == [
+        "Claude Opus 4.6",
+        "Gemini 3.1 Pro",
+        "GPT-5.4",
+        "DeepSeek V4 Pro",
+        "GPT-OSS 120B",
+        "Llama 3.3 70B",
+    ]
+
+
 def _annotation_frame(judge_id: str) -> pd.DataFrame:
     """Build one minimal processed LLM annotation row using prompt letters."""
 

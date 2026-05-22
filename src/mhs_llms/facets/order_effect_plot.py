@@ -13,9 +13,19 @@ from mhs_llms.labels import infer_provider, model_id_to_plot_label
 from mhs_llms.plotting import apply_plot_style, format_plot_text, get_provider_color, save_figure
 
 
-OPEN_MODEL_PROVIDERS = {"deepseek", "minimax", "moonshotai", "qwen", "xiaomi", "zai"}
-MODEL_GROUP_SORT_COLUMNS = ["model_group", "display_sort_label"]
-MODEL_GROUP_SORT_ASCENDING = [True, True]
+OPEN_MODEL_PROVIDERS = {"deepseek", "meta", "minimax", "moonshotai", "qwen", "xiaomi", "zai"}
+OPEN_MODEL_SIZE_BILLIONS = {
+    "deepseek_deepseek-v4-pro": 1600.0,
+    "moonshot_kimi-k2.5": 1000.0,
+    "openrouter_moonshotai_kimi-k2.5": 1000.0,
+    "openrouter_deepseek_deepseek-v3.2": 671.0,
+    "openrouter_minimax_minimax-m2.5": 229.0,
+    "together_openai_gpt-oss-120b": 116.8,
+    "together_meta-llama_llama-3.3-70b-instruct-turbo": 70.6,
+}
+OPEN_MODEL_SIZE_FALLBACK = 0.0
+MODEL_GROUP_SORT_COLUMNS = ["model_group", "open_model_size_billions", "display_sort_label"]
+MODEL_GROUP_SORT_ASCENDING = [True, False, True]
 MODEL_GROUP_SORT_KIND = "stable"
 
 
@@ -57,6 +67,7 @@ class OrderShiftPlotStyle:
     odds_ratio_null_line_width: float
     odds_ratio_xlabel: str
     odds_ratio_scale: str
+    odds_ratio_x_limits: tuple[float, float] | None
     pooled_band_color: str
     pooled_band_alpha: float
     pooled_band_zorder: int
@@ -152,7 +163,8 @@ def load_order_shift_comparison(
     ) ** 0.5
     comparison["provider"] = comparison["facet_label"].map(infer_provider)
     comparison["display_label"] = comparison["facet_label"].map(model_id_to_plot_label)
-    comparison["model_group"] = comparison["provider"].map(_model_group_order)
+    comparison["model_group"] = comparison["facet_label"].map(_model_group_order)
+    comparison["open_model_size_billions"] = comparison["facet_label"].map(_open_model_size_billions)
     comparison["display_sort_label"] = comparison["display_label"].str.casefold()
     return comparison.sort_values(
         MODEL_GROUP_SORT_COLUMNS,
@@ -290,6 +302,8 @@ def plot_order_shift_comparison(
             zorder=style.pooled_line_zorder,
         )
     odds_xlim = _odds_ratio_xlim(balanced_log_limit, style)
+    if style.odds_ratio_scale == "log":
+        delta_axis.set_xscale(style.odds_ratio_scale)
     delta_axis.set_xlim(*odds_xlim)
     _set_odds_ratio_ticks(delta_axis, odds_xlim, style)
     _add_significance_markers(delta_axis, comparison, style)
@@ -397,10 +411,19 @@ def plot_order_shift_comparison(
     return plotted_path
 
 
-def _model_group_order(provider: str) -> int:
+def _model_group_order(model_id: str) -> int:
     """Return sorting order with closed models before open-weight models."""
 
+    if model_id in OPEN_MODEL_SIZE_BILLIONS:
+        return 1
+    provider = infer_provider(model_id)
     return int(provider in OPEN_MODEL_PROVIDERS)
+
+
+def _open_model_size_billions(model_id: str) -> float:
+    """Return total parameter count in billions for sorting open-weight models."""
+
+    return OPEN_MODEL_SIZE_BILLIONS.get(model_id, OPEN_MODEL_SIZE_FALLBACK)
 
 
 def _balanced_log_limit(
@@ -418,6 +441,8 @@ def _balanced_log_limit(
 def _odds_ratio_xlim(log_limit: float, style: OrderShiftPlotStyle) -> tuple[float, float]:
     """Return odds-ratio x-limits, optionally linear-balanced around one."""
 
+    if style.odds_ratio_x_limits is not None:
+        return style.odds_ratio_x_limits
     log_limits = (math.exp(-log_limit), math.exp(log_limit))
     if style.odds_ratio_scale == "log":
         return log_limits

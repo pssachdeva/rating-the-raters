@@ -22,10 +22,23 @@ SECONDARY_MODEL_IDS = (
     "anthropic_claude-opus-4-5_medium",
 )
 
+FULL_RUN_MODEL_IDS = (
+    "openai_gpt-5.4_medium",
+    "google_gemini-3.1-pro-preview_medium",
+    "anthropic_claude-opus-4-6_medium",
+    "xai_grok-4-1-fast-reasoning",
+    "deepseek_deepseek-v4-pro",
+    "moonshot_kimi-k2.5",
+    "openrouter_minimax_minimax-m2.5",
+    "together_openai_gpt-oss-120b",
+    "together_meta-llama_llama-3.3-70b-instruct-turbo",
+)
+
 MODEL_SETS = {
     "primary": TARGET_MODEL_IDS,
     "secondary": SECONDARY_MODEL_IDS,
     "expanded": (*TARGET_MODEL_IDS, *SECONDARY_MODEL_IDS),
+    "full_run": FULL_RUN_MODEL_IDS,
 }
 
 ORIGINAL_INPUT_PATHS = (
@@ -43,6 +56,18 @@ REVERSE_INPUT_PATHS = (
 
 SECONDARY_REVERSE_INPUT_PATHS = (
     Path("data/question_order_reverse_secondary_batch_processed.csv"),
+)
+
+FULL_RUN_ORIGINAL_INPUT_PATHS = (
+    Path("data/full_run_models_reference_set_processed.csv"),
+)
+
+FULL_RUN_REVERSE_INPUT_PATHS = (
+    Path("data/question_order_reverse_batch_processed.csv"),
+    Path("data/question_order_reverse_deepseek_processed.csv"),
+    Path("data/question_order_reverse_moonshot_processed.csv"),
+    Path("data/question_order_reverse_together_processed.csv"),
+    Path("data/question_order_reverse_openrouter_processed.csv"),
 )
 
 DEFAULT_ORIGINAL_OUTPUT_PATH = Path("data/question_order_original_matched_processed.csv")
@@ -76,17 +101,27 @@ def main() -> None:
         default=DEFAULT_REVERSE_OUTPUT_PATH,
         help="Output path for reverse-order matched annotations.",
     )
+    parser.add_argument(
+        "--allow-incomplete-comments",
+        action="store_true",
+        help="Keep all matched model/comment pairs instead of requiring comments complete for every model.",
+    )
     args = parser.parse_args()
 
-    original = load_processed_annotations(ORIGINAL_INPUT_PATHS)
+    original_paths = ORIGINAL_INPUT_PATHS
     reverse_paths = REVERSE_INPUT_PATHS
+    if args.model_set == "full_run":
+        original_paths = FULL_RUN_ORIGINAL_INPUT_PATHS
+        reverse_paths = FULL_RUN_REVERSE_INPUT_PATHS
     if args.include_secondary_reverse:
         reverse_paths = (*reverse_paths, *SECONDARY_REVERSE_INPUT_PATHS)
+    original = load_processed_annotations(original_paths)
     reverse = load_processed_annotations(reverse_paths)
     original_matched, reverse_matched = build_matched_question_order_frames(
         original=original,
         reverse=reverse,
         model_ids=MODEL_SETS[args.model_set],
+        require_complete_comments=not args.allow_incomplete_comments,
     )
 
     args.original_output.parent.mkdir(parents=True, exist_ok=True)
@@ -114,6 +149,7 @@ def build_matched_question_order_frames(
     original: pd.DataFrame,
     reverse: pd.DataFrame,
     model_ids: tuple[str, ...] = TARGET_MODEL_IDS,
+    require_complete_comments: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Filter original/reverse annotations to identical model/comment pairs."""
 
@@ -135,11 +171,12 @@ def build_matched_question_order_frames(
     if matched_pairs.empty:
         raise ValueError("No matched judge/comment pairs found between original and reverse annotations")
 
-    common_comment_ids = _common_complete_comment_ids(matched_pairs, model_ids)
-    if not common_comment_ids:
-        missing_summary = _summarize_missing_pairs(original_pairs, reverse_pairs)
-        raise ValueError(f"No complete shared comments across all models: {missing_summary}")
-    matched_pairs = matched_pairs.loc[matched_pairs["comment_id"].isin(common_comment_ids)].copy()
+    if require_complete_comments:
+        common_comment_ids = _common_complete_comment_ids(matched_pairs, model_ids)
+        if not common_comment_ids:
+            missing_summary = _summarize_missing_pairs(original_pairs, reverse_pairs)
+            raise ValueError(f"No complete shared comments across all models: {missing_summary}")
+        matched_pairs = matched_pairs.loc[matched_pairs["comment_id"].isin(common_comment_ids)].copy()
 
     original_matched = original_selected.merge(matched_pairs, on=["judge_id", "comment_id"], how="inner")
     reverse_matched = reverse_selected.merge(matched_pairs, on=["judge_id", "comment_id"], how="inner")

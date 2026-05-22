@@ -1,0 +1,33 @@
+name: question_order_reverse_together
+description: |
+  Reverse severity-item order run on the MHS reference set for Together-hosted
+  full-run models.
+
+subset: reference_set
+
+prompt:
+  system_prompt_path: prompts/mhs_survey_v1_reversed_severity_order.txt
+
+async:
+  max_attempts: 3
+  retry_delay_seconds: 2.0
+  concurrency: 4
+
+models:
+  - id: together_openai_gpt-oss-120b
+    provider: together
+    name: openai/gpt-oss-120b
+    max_tokens: 4096
+    params:
+      reasoning_effort: low
+
+  - id: together_meta-llama_llama-3.3-70b-instruct-turbo
+    provider: together
+    name: meta-llama/Llama-3.3-70B-Instruct-Turbo
+    max_tokens: 4096
+    params:
+      temperature: 0.5
+
+batches:
+  run_dir: batches/question_order_reverse_together
+  combined_output_path: data/question_order_reverse_together_processed.csv

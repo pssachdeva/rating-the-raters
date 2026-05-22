@@ -1,0 +1,27 @@
+name: question_order_reverse_moonshot
+description: |
+  Reverse severity-item order run on the MHS reference set for the direct
+  Moonshot/Kimi full-run model.
+
+subset: reference_set
+
+prompt:
+  system_prompt_path: prompts/mhs_survey_v1_reversed_severity_order.txt
+
+async:
+  max_attempts: 3
+  retry_delay_seconds: 2.0
+  concurrency: 2
+
+model:
+  id: moonshot_kimi-k2.5
+  provider: moonshot
+  name: kimi-k2.5
+  max_tokens: 8192
+  params:
+    thinking:
+      type: enabled
+
+batches:
+  run_dir: batches/question_order_reverse_moonshot
+  combined_output_path: data/question_order_reverse_moonshot_processed.csv
