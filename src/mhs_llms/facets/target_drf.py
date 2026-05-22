@@ -37,8 +37,10 @@ def run_target_drf_facets(config_path: Path) -> TargetDRFOutputs:
 
     config = load_target_drf_config(config_path)
     target_labels = build_target_identity_labels(config)
+    annotation_columns = ["comment_id", "judge_id", *ITEM_NAMES]
     annotation_frames = [
-        pd.read_csv(annotation_path) for annotation_path in config.annotation_paths
+        pd.read_csv(annotation_path, usecols=annotation_columns)
+        for annotation_path in config.annotation_paths
     ]
     annotations = pd.concat(annotation_frames, ignore_index=True)
     target_labels = filter_target_labels_to_annotations(
@@ -74,11 +76,13 @@ def run_target_drf_facets(config_path: Path) -> TargetDRFOutputs:
         key_column="facet_label",
         measure_column="measure",
     )
-    judge_anchors = load_measure_anchors(
-        score_path=config.judge_scores_path,
-        key_column="facet_label",
-        measure_column="measure",
-    )
+    judge_anchors = None
+    if config.judge_scores_path is not None:
+        judge_anchors = load_measure_anchors(
+            score_path=config.judge_scores_path,
+            key_column="facet_label",
+            measure_column="measure",
+        )
 
     facets_run_dir = config.facets_run_dir
     facets_run_dir.mkdir(parents=True, exist_ok=True)
@@ -209,9 +213,11 @@ def parse_target_pairwise_contrasts(report_path: Path) -> pd.DataFrame:
     rows = []
     in_table = False
     for line in report_path.read_text(errors="replace").splitlines():
-        if line.startswith("Table 14.") and "Bias/Interaction Pairwise Report" in line:
+        if _is_target_pairwise_table_header(line):
             in_table = True
             continue
+        if in_table and line.startswith("Table 14."):
+            break
         if in_table and line.startswith("+---") and rows:
             break
         if not in_table or not _looks_like_pairwise_row(line):
@@ -221,6 +227,15 @@ def parse_target_pairwise_contrasts(report_path: Path) -> pd.DataFrame:
     if not rows:
         raise ValueError(f"No FACETS target pairwise rows found in {report_path}")
     return pd.DataFrame(rows)
+
+
+def _is_target_pairwise_table_header(line: str) -> bool:
+    """Return whether a FACETS header is the target-pair contrast section."""
+
+    return bool(
+        re.match(r"^Table 14\.(?:\d+\.)*4\s+", line)
+        and "Bias/Interaction Pairwise Report" in line
+    )
 
 
 def build_target_identity_labels(config: TargetDRFConfig) -> pd.DataFrame:
@@ -496,7 +511,7 @@ def build_target_drf_facets_spec(
     target_labels: pd.DataFrame,
     comment_anchors: dict[str, float],
     item_anchors: dict[str, float],
-    judge_anchors: dict[str, float],
+    judge_anchors: dict[str, float] | None,
 ) -> str:
     """Build a four-facet FACETS spec with judge and target bias terms."""
 
@@ -526,7 +541,16 @@ def build_target_drf_facets_spec(
 
     relevant_comment_anchors = _select_anchor_subset(comment_anchors, comment_ids, "comment")
     relevant_item_anchors = _select_anchor_subset(item_anchors, ITEM_NAMES, "item")
-    relevant_judge_anchors = _select_judge_anchors(judge_anchors, judge_label_map)
+    judge_label_block = _build_plain_label_block(2, "Judges", judge_ids, judge_label_map)
+    if judge_anchors is not None:
+        relevant_judge_anchors = _select_judge_anchors(judge_anchors, judge_label_map)
+        judge_label_block = _build_anchor_label_block(
+            2,
+            "Judges",
+            judge_ids,
+            judge_label_map,
+            relevant_judge_anchors,
+        )
 
     delements = ", ".join(config.facets.delements)
     optional_lines = []
@@ -553,7 +577,7 @@ def build_target_drf_facets_spec(
         f"CSV = {config.facets.csv}\n\n"
         "Labels =\n"
         f"{_build_anchor_label_block(1, 'Comments', comment_ids, comment_label_map, relevant_comment_anchors)}\n"
-        f"{_build_anchor_label_block(2, 'Judges', judge_ids, judge_label_map, relevant_judge_anchors)}\n"
+        f"{judge_label_block}\n"
         f"{_build_anchor_label_block(3, 'Items', item_ids, dict(enumerate(ITEM_NAMES, start=1)), relevant_item_anchors, anchor_key_by_label=True)}\n"
         f"{_build_target_label_block(config, target_ids, target_label_map)}\n\n"
         f"Data = {config.facets_data_filename}\n"

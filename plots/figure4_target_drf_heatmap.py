@@ -16,23 +16,39 @@ import pandas as pd
 from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR
 
 
+POOLED_TARGET_TERMS_PATH = DATA_DIR / "full_set_all_models_target_drf_free_judges_target_terms.csv"
 MODEL_TERM_PATHS = {
-    "openai_gpt-5.4_medium": DATA_DIR / "full_set_openai_target_drf_target_terms.csv",
-    "anthropic_claude-opus-4-6_medium": DATA_DIR / "full_set_anthropic_target_drf_target_terms.csv",
-    "google_gemini-3.1-pro-preview_medium": DATA_DIR / "target_drf_google_target_terms.csv",
-    "xai_grok-4-1-fast-reasoning": DATA_DIR / "full_set_xai_target_drf_target_terms.csv",
+    "openai_gpt-5.4_medium": POOLED_TARGET_TERMS_PATH,
+    "anthropic_claude-opus-4-6_medium": POOLED_TARGET_TERMS_PATH,
+    "google_gemini-3.1-pro-preview_medium": POOLED_TARGET_TERMS_PATH,
+    "xai_grok-4-1-fast-reasoning": POOLED_TARGET_TERMS_PATH,
+    "deepseek_deepseek-v4-pro": POOLED_TARGET_TERMS_PATH,
+    "moonshot_kimi-k2.5": POOLED_TARGET_TERMS_PATH,
+    "openrouter_minimax_minimax-m2.5": POOLED_TARGET_TERMS_PATH,
+    "together_openai_gpt-oss-120b": POOLED_TARGET_TERMS_PATH,
+    "together_meta-llama_llama-3.3-70b-instruct-turbo": POOLED_TARGET_TERMS_PATH,
 }
 MODEL_ORDER = [
     "anthropic_claude-opus-4-6_medium",
     "google_gemini-3.1-pro-preview_medium",
     "openai_gpt-5.4_medium",
     "xai_grok-4-1-fast-reasoning",
+    "deepseek_deepseek-v4-pro",
+    "moonshot_kimi-k2.5",
+    "openrouter_minimax_minimax-m2.5",
+    "together_openai_gpt-oss-120b",
+    "together_meta-llama_llama-3.3-70b-instruct-turbo",
 ]
 MODEL_LABELS = {
     "openai_gpt-5.4_medium": "GPT-5.4",
     "anthropic_claude-opus-4-6_medium": "Claude Opus 4.6",
     "google_gemini-3.1-pro-preview_medium": "Gemini 3.1 Pro",
     "xai_grok-4-1-fast-reasoning": "Grok 4.1 Fast",
+    "deepseek_deepseek-v4-pro": "DeepSeek V4 Pro",
+    "moonshot_kimi-k2.5": "Kimi K2.5",
+    "openrouter_minimax_minimax-m2.5": "MiniMax M2.5",
+    "together_openai_gpt-oss-120b": "GPT-OSS 120B",
+    "together_meta-llama_llama-3.3-70b-instruct-turbo": "Llama 3.3 70B",
 }
 IDENTITY_GROUPS = {
     "Gender": [
@@ -65,8 +81,8 @@ TARGET_LABELS = {
 }
 TARGET_ORDER = [target_id for targets in IDENTITY_GROUPS.values() for target_id, _ in targets]
 
-OUTPUT_PATH = ARTIFACTS_DIR / "target_drf_odds_heatmap.png"
-FIGSIZE = (8.8, 3.45)
+OUTPUT_PATH = ARTIFACTS_DIR / "figure4_target_drf_heatmap.pdf"
+FIGSIZE = (8.8, 5.2)
 DPI = 300
 COLOR_CYCLE = [
     "#0072B2",
@@ -84,14 +100,21 @@ CELL_EDGE_COLOR = "white"
 CELL_EDGE_WIDTH = 0.7
 GAP_WIDTH = 0.35
 GROUP_LABEL_Y = 1.04
-GROUP_LABEL_SIZE = 7.6
-XTICK_LABEL_SIZE = 7.2
-YTICK_LABEL_SIZE = 8.0
-COLORBAR_LABEL_SIZE = 8.0
-COLORBAR_TICK_SIZE = 7.2
-COLORBAR_ENDPOINT_LABEL_SIZE = 7.0
+GROUP_LABEL_SIZE = 11.0
+XTICK_LABEL_SIZE = 10.0
+YTICK_LABEL_SIZE = 10.0
+Y_TOP_ROW_INDEX = 0
+Y_BOTTOM_ROW_INDEX = None
+COLORBAR_LABEL_SIZE = 10.0
+COLORBAR_LABEL_PAD = 16.0
+COLORBAR_TICK_SIZE = 9.0
+COLORBAR_ENDPOINT_LABEL_SIZE = 8.0
 COLORBAR_TOP_LABEL = "Higher\nHate\nThreshold"
 COLORBAR_BOTTOM_LABEL = "Lower\nHate\nThreshold"
+COLORBAR_SCALE = "log"
+COLORBAR_ODDS_MIN = 0.5
+COLORBAR_ODDS_MAX = 2.0
+COLORBAR_ODDS_TICKS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
 SIGNIFICANCE_MARKER_SIZE = 8.0
 SIGNIFICANCE_MARKER_COLOR = "#FFFFFF"
 SIGNIFICANCE_STROKE_COLOR = "#111111"
@@ -145,6 +168,10 @@ def load_target_drf_terms(data_paths: dict[str, Path], model_order: list[str]) -
         if not data_path.exists():
             raise FileNotFoundError(f"Missing target-DRF terms file: {data_path}")
         frame = pd.read_csv(data_path)
+        if "judge_label" in frame.columns:
+            frame = frame.loc[frame["judge_label"].eq(model_id)].copy()
+            if frame.empty:
+                raise ValueError(f"Missing pooled target-DRF rows for model: {model_id}")
         frame["model_id"] = model_id
         frames.append(frame)
 
@@ -233,12 +260,20 @@ def draw_heatmap(
     """Draw the odds-ratio heatmap with a neutral center at one."""
 
     finite_values = odds_matrix[np.isfinite(odds_matrix)]
-    lower = float(np.nanmin(finite_values))
-    upper = float(np.nanmax(finite_values))
-    lower_distance = 1.0 - lower
-    upper_distance = upper - 1.0
-    distance = max(lower_distance, upper_distance)
-    norm = mcolors.TwoSlopeNorm(vmin=1.0 - distance, vcenter=1.0, vmax=1.0 + distance)
+    plot_values = transform_odds_for_color_scale(odds_matrix)
+    if COLORBAR_SCALE == "log":
+        log_values = np.log(finite_values)
+        if COLORBAR_ODDS_MIN is None or COLORBAR_ODDS_MAX is None:
+            scale_distance = float(np.nanmax(np.abs(log_values)))
+        else:
+            scale_distance = max(abs(math.log(COLORBAR_ODDS_MIN)), abs(math.log(COLORBAR_ODDS_MAX)))
+        norm = mcolors.TwoSlopeNorm(vmin=-scale_distance, vcenter=0.0, vmax=scale_distance)
+    elif COLORBAR_SCALE == "linear":
+        scale_min = float(np.nanmin(finite_values)) if COLORBAR_ODDS_MIN is None else COLORBAR_ODDS_MIN
+        scale_max = float(np.nanmax(finite_values)) if COLORBAR_ODDS_MAX is None else COLORBAR_ODDS_MAX
+        norm = mcolors.TwoSlopeNorm(vmin=scale_min, vcenter=1.0, vmax=scale_max)
+    else:
+        raise ValueError(f"Unsupported COLORBAR_SCALE: {COLORBAR_SCALE}")
     color_map = mcolors.LinearSegmentedColormap.from_list(
         "red_white_black",
         HEATMAP_COLORS,
@@ -249,12 +284,22 @@ def draw_heatmap(
     return axis.pcolormesh(
         x_edges,
         y_edges,
-        np.ma.masked_invalid(odds_matrix),
+        np.ma.masked_invalid(plot_values),
         cmap=color_map,
         norm=norm,
         edgecolors=CELL_EDGE_COLOR,
         linewidth=CELL_EDGE_WIDTH,
     )
+
+
+def transform_odds_for_color_scale(odds_matrix: np.ndarray) -> np.ndarray:
+    """Return heatmap values in the configured odds color scale."""
+
+    if COLORBAR_SCALE == "log":
+        return np.log(odds_matrix)
+    if COLORBAR_SCALE == "linear":
+        return odds_matrix
+    raise ValueError(f"Unsupported COLORBAR_SCALE: {COLORBAR_SCALE}")
 
 
 def style_axis(axis: plt.Axes, x_layout: pd.DataFrame, column_widths: list[float]) -> None:
@@ -276,7 +321,8 @@ def style_axis(axis: plt.Axes, x_layout: pd.DataFrame, column_widths: list[float
     axis.tick_params(axis="x", length=0, pad=X_LABEL_PAD)
     axis.tick_params(axis="y", length=0)
     axis.set_xlim(0.0, float(sum(column_widths)))
-    axis.set_ylim(len(MODEL_ORDER) - 0.5, -0.5)
+    bottom_row = len(MODEL_ORDER) - 1 if Y_BOTTOM_ROW_INDEX is None else Y_BOTTOM_ROW_INDEX
+    axis.set_ylim(bottom_row + 0.5, Y_TOP_ROW_INDEX - 0.5)
     for spine in axis.spines.values():
         spine.set_visible(False)
 
@@ -348,9 +394,16 @@ def add_colorbar(
         bold_text(COLORBAR_LABEL),
         fontsize=COLORBAR_LABEL_SIZE,
         rotation=270,
-        labelpad=12,
+        labelpad=COLORBAR_LABEL_PAD,
     )
     colorbar.ax.tick_params(labelsize=COLORBAR_TICK_SIZE)
+    odds_ticks = [
+        tick
+        for tick in COLORBAR_ODDS_TICKS
+        if heatmap.norm.vmin <= transform_odds_tick_for_color_scale(tick) <= heatmap.norm.vmax
+    ]
+    colorbar.set_ticks([transform_odds_tick_for_color_scale(tick) for tick in odds_ticks])
+    colorbar.set_ticklabels([f"{tick:g}" for tick in odds_ticks])
     colorbar.ax.text(
         0.5,
         1.03,
@@ -369,6 +422,16 @@ def add_colorbar(
         va="top",
         fontsize=COLORBAR_ENDPOINT_LABEL_SIZE,
     )
+
+
+def transform_odds_tick_for_color_scale(tick: float) -> float:
+    """Return a colorbar tick location in the configured odds color scale."""
+
+    if COLORBAR_SCALE == "log":
+        return math.log(tick)
+    if COLORBAR_SCALE == "linear":
+        return tick
+    raise ValueError(f"Unsupported COLORBAR_SCALE: {COLORBAR_SCALE}")
 
 
 if __name__ == "__main__":

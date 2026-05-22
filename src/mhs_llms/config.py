@@ -169,7 +169,7 @@ class TargetDRFConfig:
     exclude_targets: tuple[str, ...]
     comment_scores_path: Path
     item_scores_path: Path
-    judge_scores_path: Path
+    judge_scores_path: Optional[Path]
     facets_run_dir: Path
     target_labels_path: Path
     facets_data_filename: str
@@ -578,7 +578,11 @@ def load_target_drf_config(config_path: Path) -> TargetDRFConfig:
         exclude_targets=tuple(str(value) for value in targets.get("exclude", [])),
         comment_scores_path=_resolve_path(data["anchors"]["comment_scores_path"]),
         item_scores_path=_resolve_path(data["anchors"]["item_scores_path"]),
-        judge_scores_path=_resolve_path(data["anchors"]["judge_scores_path"]),
+        judge_scores_path=(
+            _resolve_path(data["anchors"]["judge_scores_path"])
+            if data["anchors"].get("judge_scores_path") is not None
+            else None
+        ),
         facets_run_dir=_resolve_path(data["output"]["facets_run_dir"]),
         target_labels_path=_resolve_path(data["output"]["target_labels_path"]),
         facets_data_filename=str(data["output"].get("facets_data_filename", "target_drf_data.tsv")),
