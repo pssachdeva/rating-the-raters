@@ -30,6 +30,7 @@ class LLMOnlyFacetsOutputs:
 def _prepare_llm_only_annotations(
     annotations: pd.DataFrame,
     recode_like_humans: bool = False,
+    response_recodes: dict[str, dict[int, int]] | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Convert prompt-letter model annotations into FACETS-ready numeric rows."""
 
@@ -42,6 +43,8 @@ def _prepare_llm_only_annotations(
         )
     if recode_like_humans:
         selected = recode_responses(selected, **HUMAN_FACETS_RECODE_MAP)
+    if response_recodes:
+        selected = recode_responses(selected, **response_recodes)
 
     selected["judge_label"] = selected["judge_id"]
     selected["judge_id"] = selected["judge_id"].map(_build_facets_judge_map(selected["judge_id"]))
@@ -68,6 +71,7 @@ def run_llm_only_facets(config_path: Path) -> LLMOnlyFacetsOutputs:
     prepared_annotations, judge_mapping = _prepare_llm_only_annotations(
         annotations=annotations,
         recode_like_humans=config.recode_like_humans,
+        response_recodes=config.response_recodes,
     )
 
     facets_frame = build_facets_frame(prepared_annotations)

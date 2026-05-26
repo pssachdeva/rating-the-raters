@@ -359,6 +359,110 @@ def test_execute_async_request_uses_openrouter_openai_client(tmp_path: Path, mon
     assert response_text.startswith('{"target_groups"')
 
 
+def test_build_async_provider_request_supports_together_params(tmp_path: Path) -> None:
+    config = make_config(tmp_path, provider="together", model_name="openai/gpt-oss-120b")
+    config = ModelBatchConfig(
+        name=config.name,
+        subset=config.subset,
+        limit=config.limit,
+        prompt=config.prompt,
+        model=BatchModelConfig(
+            provider="together",
+            name="openai/gpt-oss-120b",
+            id="together_openai_gpt-oss-120b",
+            max_tokens=512,
+            params={"reasoning_effort": "low"},
+        ),
+        batches=config.batches,
+    )
+
+    payload = _build_async_provider_request(
+        config=config,
+        system_prompt="Return JSON.",
+        user_prompt="comment text",
+    )
+
+    assert payload == {
+        "model": "openai/gpt-oss-120b",
+        "messages": [
+            {"role": "system", "content": "Return JSON."},
+            {"role": "user", "content": "comment text"},
+        ],
+        "max_tokens": 512,
+        "reasoning_effort": "low",
+    }
+
+
+def test_build_async_provider_request_rejects_shared_together_reasoning(tmp_path: Path) -> None:
+    config = make_config(tmp_path, provider="together", model_name="openai/gpt-oss-120b")
+    config = ModelBatchConfig(
+        name=config.name,
+        subset=config.subset,
+        limit=config.limit,
+        prompt=config.prompt,
+        model=BatchModelConfig(
+            provider="together",
+            name="openai/gpt-oss-120b",
+            id="together_openai_gpt-oss-120b",
+            max_tokens=512,
+            reasoning=BatchReasoningConfig(effort="low"),
+        ),
+        batches=config.batches,
+    )
+
+    try:
+        _build_async_provider_request(
+            config=config,
+            system_prompt="Return JSON.",
+            user_prompt="comment text",
+        )
+    except ValueError as exc:
+        assert "Together async requests do not support the shared reasoning" in str(exc)
+    else:
+        raise AssertionError("Expected Together shared reasoning to be rejected")
+
+
+def test_execute_async_request_routes_together_to_streaming_endpoint(
+    tmp_path: Path, monkeypatch
+) -> None:
+    config = make_config(tmp_path, provider="together", model_name="openai/gpt-oss-120b")
+    request_payload = {
+        "model": "openai/gpt-oss-120b",
+        "messages": [{"role": "user", "content": "comment text"}],
+    }
+    captured: dict[str, object] = {}
+
+    def fake_streaming_request(*, config, request_payload, base_url, provider_label, include_usage):
+        captured.update(
+            {
+                "provider": config.model.provider,
+                "request_payload": request_payload,
+                "base_url": base_url,
+                "provider_label": provider_label,
+                "include_usage": include_usage,
+            }
+        )
+        return {"stream": True}, '{"target_groups":["I"]}'
+
+    monkeypatch.setattr(
+        async_jobs,
+        "_execute_openai_compatible_streaming_request",
+        fake_streaming_request,
+    )
+
+    payload, response_text = _execute_async_request(config=config, request_payload=request_payload)
+
+    assert payload == {"stream": True}
+    assert response_text == '{"target_groups":["I"]}'
+    assert captured == {
+        "provider": "together",
+        "request_payload": request_payload,
+        "base_url": async_jobs.TOGETHER_API_BASE_URL,
+        "provider_label": "Together",
+        "include_usage": False,
+    }
+
+
 def test_process_async_for_config_writes_partial_outputs(tmp_path: Path, monkeypatch) -> None:
     config = make_config(tmp_path)
     monkeypatch.setattr(

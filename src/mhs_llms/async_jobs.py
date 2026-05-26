@@ -50,6 +50,7 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_TITLE = "measuring-hate-speech-llms"
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 MOONSHOT_API_BASE_URL = "https://api.moonshot.ai/v1"
+TOGETHER_API_BASE_URL = "https://api.together.xyz/v1"
 
 
 @dataclass(frozen=True)
@@ -644,6 +645,22 @@ def _build_async_provider_request(
             payload.update(config.model.params)
         return payload
 
+    if provider == "together":
+        if config.model.reasoning.effort is not None or config.model.reasoning.budget_tokens is not None:
+            raise ValueError(
+                "Together async requests do not support the shared reasoning config fields; "
+                "pass provider-specific controls through model params if needed"
+            )
+        payload = {
+            "model": config.model.name,
+            "messages": _openai_messages(system_prompt, user_prompt),
+        }
+        if config.model.max_tokens is not None:
+            payload["max_tokens"] = config.model.max_tokens
+        if config.model.params:
+            payload.update(config.model.params)
+        return payload
+
     if provider == "anthropic":
         payload = {
             "model": config.model.name,
@@ -725,6 +742,15 @@ def _execute_async_request(
             request_payload=request_payload,
             base_url=MOONSHOT_API_BASE_URL,
             provider_label="Moonshot",
+            include_usage=False,
+        )
+
+    if provider == "together":
+        return _execute_openai_compatible_streaming_request(
+            config=config,
+            request_payload=request_payload,
+            base_url=TOGETHER_API_BASE_URL,
+            provider_label="Together",
             include_usage=False,
         )
 

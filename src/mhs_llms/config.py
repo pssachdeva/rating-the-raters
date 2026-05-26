@@ -113,6 +113,7 @@ class LLMOnlyFacetsConfig:
 
     annotation_paths: tuple[Path, ...]
     recode_like_humans: bool
+    response_recodes: dict[str, dict[int, int]]
     facets_run_dir: Path
     facets_data_filename: str
     facets_spec_filename: str
@@ -475,10 +476,14 @@ def load_llm_only_facets_config(config_path: Path) -> LLMOnlyFacetsConfig:
     annotation_values = data["annotations"].get("paths")
     if annotation_values is None:
         annotation_values = [data["annotations"]["path"]]
+    response_recodes = _parse_response_recodes(
+        data.get("scoring", {}).get("response_recodes", {})
+    )
 
     return LLMOnlyFacetsConfig(
         annotation_paths=tuple(_resolve_path(path_value) for path_value in annotation_values),
         recode_like_humans=bool(data.get("scoring", {}).get("recode_like_humans", False)),
+        response_recodes=response_recodes,
         facets_run_dir=_resolve_path(data["output"]["facets_run_dir"]),
         facets_data_filename=str(
             data["output"].get("facets_data_filename", "llm_only_facets_data.tsv")
@@ -494,6 +499,25 @@ def load_llm_only_facets_config(config_path: Path) -> LLMOnlyFacetsConfig:
         ),
         facets=_parse_facets_config(data["facets"]),
     )
+
+
+def _parse_response_recodes(raw_recodes: Any) -> dict[str, dict[int, int]]:
+    """Normalize YAML response recodes into integer-to-integer mappings."""
+
+    if raw_recodes is None:
+        return {}
+    if not isinstance(raw_recodes, dict):
+        raise ValueError("scoring.response_recodes must be a mapping")
+
+    parsed: dict[str, dict[int, int]] = {}
+    for item_name, item_mapping in raw_recodes.items():
+        if not isinstance(item_mapping, dict):
+            raise ValueError(f"Response recode for {item_name} must be a mapping")
+        parsed[str(item_name)] = {
+            int(source_value): int(target_value)
+            for source_value, target_value in item_mapping.items()
+        }
+    return parsed
 
 
 def load_severity_decomposition_config(config_path: Path) -> SeverityDecompositionConfig:
