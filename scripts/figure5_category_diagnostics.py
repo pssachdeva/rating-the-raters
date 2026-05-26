@@ -14,7 +14,7 @@ FACETS_OUTPUT_PATH = Path("facets/full_set_all_models_llm_only/full_set_all_mode
 OUTPUT_PNG_PATH = Path("artifacts/figure5_category_diagnostics.png")
 OUTPUT_PDF_PATH = Path("artifacts/figure5_category_diagnostics.pdf")
 
-FIGURE_SIZE = (3.05, 3.55)
+FIGURE_SIZE = (3.05, 2.75)
 DPI = 300
 SAVE_DPI = 300
 SAVE_PAD_INCHES = 0.02
@@ -77,7 +77,7 @@ ITEM_LABELS = {
     "dehumanize": "Dehumanize",
     "violence": "Violence",
     "genocide": "Genocide",
-    "attack_defend": "Attack",
+    "attack_defend": "Attack/Defend",
     "hate_speech": "Hate Speech",
 }
 MODEL_LINE_PATTERN = re.compile(r"Model = .*?; Items: (.+)")
