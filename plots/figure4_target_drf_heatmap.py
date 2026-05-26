@@ -43,7 +43,7 @@ MODEL_LABELS = {
     "openai_gpt-5.4_medium": "GPT-5.4",
     "anthropic_claude-opus-4-6_medium": "Claude Opus 4.6",
     "google_gemini-3.1-pro-preview_medium": "Gemini 3.1 Pro",
-    "xai_grok-4-1-fast-reasoning": "Grok 4.1 Fast",
+    "xai_grok-4-1-fast-reasoning": "Grok 4.1",
     "deepseek_deepseek-v4-pro": "DeepSeek V4 Pro",
     "moonshot_kimi-k2.5": "Kimi K2.5",
     "openrouter_minimax_minimax-m2.5": "MiniMax M2.5",
@@ -82,7 +82,7 @@ TARGET_LABELS = {
 TARGET_ORDER = [target_id for targets in IDENTITY_GROUPS.values() for target_id, _ in targets]
 
 OUTPUT_PATH = ARTIFACTS_DIR / "figure4_target_drf_heatmap.pdf"
-FIGSIZE = (8.8, 5.2)
+FIGSIZE = (8.8, 4.2)
 DPI = 300
 COLOR_CYCLE = [
     "#0072B2",
