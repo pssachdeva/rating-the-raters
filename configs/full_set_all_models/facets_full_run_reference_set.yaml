@@ -1,0 +1,27 @@
+annotations:
+  paths:
+    - data/full_run_models_reference_set_processed.csv
+
+anchors:
+  comment_scores_path: facets/human_baseline/human_facets_scores.1.txt
+  item_scores_path: facets/human_baseline/human_facets_scores.3.txt
+
+output:
+  facets_run_dir: facets/full_run_models_reference_set
+  facets_data_filename: full_run_models_reference_set_data.tsv
+  facets_spec_filename: full_run_models_reference_set_spec.txt
+  facets_score_filename: full_run_models_reference_set_scores.txt
+  facets_output_filename: full_run_models_reference_set_output.txt
+
+facets:
+  title: MHS Full-Run Models Reference Set Anchored To Human Baseline
+  model: "?, ?, #, R"
+  noncenter: 2
+  positive: 1
+  arrange: N
+  subset_detection: No
+  delements:
+    - 1N
+    - 2N
+    - 3N
+  csv: Tab

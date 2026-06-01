@@ -1,0 +1,30 @@
+name: full_set_moonshot_kimi-k2.5_async_remaining
+description: |
+  Moonshot/Kimi direct async run for the comments still missing from the
+  canonical Kimi full-set processed output.
+
+subset:
+  type: comment_ids_file
+  path: data/full_set_moonshot_kimi-k2.5_async_remaining_comment_ids.csv
+  column: comment_id
+
+prompt:
+  system_prompt_path: prompts/mhs_survey_v1.txt
+
+async:
+  max_attempts: 3
+  retry_delay_seconds: 2.0
+  concurrency: 2
+
+model:
+  id: moonshot_kimi-k2.5
+  provider: moonshot
+  name: kimi-k2.5
+  max_tokens: 8192
+  params:
+    thinking:
+      type: enabled
+
+batches:
+  run_dir: batches/full_set_moonshot_kimi-k2.5_async_remaining
+  combined_output_path: data/full_set_moonshot_kimi-k2.5_async_remaining_processed.csv
