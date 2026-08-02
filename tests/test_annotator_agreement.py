@@ -3,10 +3,12 @@ from pathlib import Path
 import pandas as pd
 
 from mhs_llms.annotator_agreement import (
+    build_llm_human_consensus_agreement,
     build_item_agreement_summary,
     krippendorff_alpha,
     plot_item_agreement_summary,
     prepare_agreement_annotations,
+    quadratic_weighted_kappa,
 )
 from mhs_llms.schema import ITEM_NAMES
 
@@ -29,6 +31,40 @@ def test_krippendorff_alpha_returns_one_for_perfect_agreement_with_missing_cells
     )
 
     assert alpha == 1.0
+
+
+def test_quadratic_weighted_kappa_returns_one_for_identical_ratings() -> None:
+    ratings = pd.Series([0, 1, 2, 1])
+
+    assert quadratic_weighted_kappa(ratings, ratings) == 1.0
+
+
+def test_build_llm_human_consensus_agreement_retains_direction() -> None:
+    human_annotations = pd.DataFrame(
+        [
+            _annotation_row(comment_id=1, annotator_id=10, sentiment=0),
+            _annotation_row(comment_id=1, annotator_id=11, sentiment=0),
+            _annotation_row(comment_id=2, annotator_id=10, sentiment=2),
+            _annotation_row(comment_id=2, annotator_id=11, sentiment=2),
+        ]
+    )
+    llm_annotations = pd.DataFrame(
+        [
+            _annotation_row(comment_id=1, judge_id="model_a", sentiment="B"),
+            _annotation_row(comment_id=2, judge_id="model_a", sentiment="D"),
+        ]
+    )
+
+    detail, summary = build_llm_human_consensus_agreement(
+        llm_annotations=llm_annotations,
+        human_annotations=human_annotations,
+        reference_comment_ids=[1, 2],
+        item_names=("sentiment",),
+    )
+
+    assert detail.loc[0, "exact_agreement"] == 0.0
+    assert detail.loc[0, "signed_mean_difference"] == 1.0
+    assert summary.loc[0, "num_models"] == 1
 
 
 def test_prepare_agreement_annotations_accepts_human_alias_columns() -> None:

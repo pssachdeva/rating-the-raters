@@ -5,12 +5,14 @@ import pandas as pd
 
 from mhs_llms import async_jobs
 from mhs_llms.async_jobs import (
+    _build_async_request_rows,
     _build_async_provider_request,
     _execute_async_request,
     launch_async_for_config,
     process_async,
     process_async_for_config,
 )
+from mhs_llms.schema import ITEM_NAMES
 from mhs_llms.config import (
     AsyncRetryConfig,
     BatchModelConfig,
@@ -52,6 +54,103 @@ def make_config(tmp_path: Path, provider: str = "openai", model_name: str = "gpt
             combined_output_path=tmp_path / "data" / "combined.csv",
         ),
     )
+
+
+def make_itemwise_config(tmp_path: Path) -> ModelBatchConfig:
+    """Build one OpenAI config using the repository's itemwise prompt assets."""
+
+    config = make_config(tmp_path)
+    return ModelBatchConfig(
+        name="openai_itemwise",
+        subset=config.subset,
+        limit=config.limit,
+        prompt=BatchPromptConfig(
+            system_prompt_path=Path("prompts/mhs_survey_itemwise_v1.txt"),
+            user_prompt_template="SOCIAL MEDIA COMMENT:\n{comment_text}",
+            mode="item_by_item",
+            items_path=Path("prompts/mhs_survey_items_v1.yaml"),
+        ),
+        model=config.model,
+        batches=config.batches,
+        async_retries=config.async_retries,
+    )
+
+
+def _itemwise_response_for_request(request_payload: dict) -> tuple[dict, str]:
+    """Return a valid single-item response matching one rendered OpenAI request."""
+
+    system_prompt = request_payload["messages"][0]["content"]
+    item_name = next(
+        item_name
+        for item_name in ITEM_NAMES
+        if f'"{item_name}": "LETTER"' in system_prompt
+    )
+    return {"id": f"response-{item_name}"}, json.dumps(
+        {"target_groups": ["I"], item_name: "A"}
+    )
+
+
+def test_build_async_request_rows_fans_one_comment_out_to_ten_items(
+    tmp_path: Path, monkeypatch
+) -> None:
+    config = make_itemwise_config(tmp_path)
+    monkeypatch.setattr(
+        async_jobs,
+        "_load_batch_comments",
+        lambda config: [{"comment_id": 1, "text": "first"}],
+    )
+
+    request_rows = _build_async_request_rows(config)
+
+    assert len(request_rows) == 10
+    assert request_rows[0]["custom_id"] == "comment-1--sentiment"
+    assert request_rows[-1]["custom_id"] == "comment-1--hate_speech"
+    assert [row["manifest"]["item_name"] for row in request_rows] == list(ITEM_NAMES)
+    assert "How would you describe the sentiment" in request_rows[0]["system_prompt"]
+    assert "calls for using violence" not in request_rows[0]["system_prompt"]
+
+
+def test_async_itemwise_run_aggregates_and_reruns_only_a_missing_item(
+    tmp_path: Path, monkeypatch
+) -> None:
+    config = make_itemwise_config(tmp_path)
+    monkeypatch.setattr(
+        async_jobs,
+        "_load_batch_comments",
+        lambda config: [{"comment_id": 1, "text": "first"}],
+    )
+    calls: list[str] = []
+
+    def fake_execute(config, request_payload):
+        _, response_text = _itemwise_response_for_request(request_payload)
+        payload = json.loads(response_text)
+        calls.append(next(key for key in payload if key != "target_groups"))
+        return {"id": f"response-{calls[-1]}"}, response_text
+
+    monkeypatch.setattr(async_jobs, "_execute_async_request", fake_execute)
+
+    launched = launch_async_for_config(config)
+    processed = process_async_for_config(config)
+    dataframe = pd.read_csv(processed.processed_csv_path)
+
+    assert launched.total_requests == 10
+    assert launched.completed_count == 10
+    assert calls == list(ITEM_NAMES)
+    assert len(dataframe) == 1
+    assert dataframe.loc[0, "hate_speech"] == "A"
+
+    paths = async_jobs._async_storage_paths(config)
+    (paths.responses_dir / "comment-1--violence.json").unlink()
+    partial = process_async_for_config(config)
+    assert partial.completed_count == 9
+    assert partial.is_complete is False
+    assert partial.processed_records_path.read_text() == ""
+
+    calls.clear()
+    repaired = launch_async_for_config(config)
+    assert repaired.completed_count == 10
+    assert repaired.skipped_existing_count == 9
+    assert calls == ["violence"]
 
 
 def test_launch_async_for_config_skips_existing_saved_queries(tmp_path: Path, monkeypatch) -> None:

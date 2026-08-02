@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from collections import Counter, defaultdict
 import json
 import os
 from pathlib import Path
@@ -16,11 +17,18 @@ from google import genai
 from loguru import logger
 from openai import OpenAI
 import pandas as pd
+import yaml
 
 from mhs_llms.config import ModelBatchConfig, load_model_batch_config, load_model_batch_configs
 from mhs_llms.constants import REFERENCE_SET_PLATFORM
 from mhs_llms.dataset import build_comment_frame, load_mhs_dataframe
-from mhs_llms.schema import annotation_record_to_row, normalize_model_annotation
+from mhs_llms.schema import (
+    ITEM_NAMES,
+    ITEM_RESPONSE_LETTERS,
+    TARGET_GROUP_CODES,
+    annotation_record_to_row,
+    normalize_model_annotation,
+)
 
 
 TERMINAL_BATCH_STATUSES = {
@@ -150,6 +158,7 @@ def launch_batch_for_config(config: ModelBatchConfig, config_path: Path | None =
             "budget_tokens": config.model.reasoning.budget_tokens,
         },
         "model_params": config.model.params,
+        "prompt_mode": config.prompt.mode,
         "batch_id": batch_id,
         "status": status,
         "subset": config.subset,
@@ -236,76 +245,13 @@ def process_batch_for_config(
     logger.info("Stored {} raw batch results at {}", len(raw_entries), raw_results_path)
 
     manifest_rows = _read_jsonl(request_manifest_path)
-    manifest_by_custom_id = {row["custom_id"]: row for row in manifest_rows}
-
-    extractor = _result_extractor(config.model.provider)
-    processed_rows: list[dict[str, Any]] = []
-    processing_errors: list[dict[str, Any]] = []
-
-    for entry in raw_entries:
-        try:
-            custom_id, response_text, response_metadata, response_error = extractor(entry)
-        except Exception as exc:  # noqa: BLE001
-            processing_errors.append(
-                {
-                    "custom_id": _result_entry_custom_id(config.model.provider, entry),
-                    "error": f"Provider result extraction failed: {exc}",
-                    "error_type": "provider_response_format_error",
-                    "raw_result": entry,
-                }
-            )
-            continue
-        manifest_row = manifest_by_custom_id.get(custom_id)
-        if manifest_row is None:
-            processing_errors.append(
-                {
-                    "custom_id": custom_id,
-                    "error": "Result returned an unknown custom_id",
-                    "raw_result": entry,
-                }
-            )
-            continue
-
-        if response_error is not None:
-            processing_errors.append(
-                {
-                    "custom_id": custom_id,
-                    "comment_id": manifest_row["comment_id"],
-                    "error": response_error,
-                    "raw_result": entry,
-                }
-            )
-            continue
-
-        try:
-            payload = _parse_response_json(response_text)
-            record = normalize_model_annotation(
-                comment_id=int(manifest_row["comment_id"]),
-                judge_id=_judge_id(config),
-                text=str(manifest_row["text"]),
-                payload=payload,
-                metadata={
-                    "provider": config.model.provider,
-                    "model": config.model.name,
-                    "batch_id": batch_id,
-                    "custom_id": custom_id,
-                    "provider_response": response_metadata,
-                },
-            )
-            processed_rows.append(
-                annotation_record_to_row(record, include_metadata=include_all_cols)
-            )
-        except Exception as exc:  # noqa: BLE001
-            processing_error = _build_processing_error_record(
-                provider_name=config.model.provider,
-                custom_id=custom_id,
-                comment_id=manifest_row["comment_id"],
-                response_text=response_text,
-                response_metadata=response_metadata,
-                exception=exc,
-            )
-            processing_error["raw_result"] = entry
-            processing_errors.append(processing_error)
+    processed_rows, processing_errors = _process_raw_results(
+        config=config,
+        raw_entries=raw_entries,
+        manifest_rows=manifest_rows,
+        batch_id=batch_id,
+        include_all_cols=include_all_cols,
+    )
 
     _write_jsonl(processed_records_path, processed_rows)
     pd.DataFrame(processed_rows).to_csv(processed_csv_path, index=False)
@@ -332,6 +278,245 @@ def process_batch_for_config(
         processed_records_path=processed_records_path,
         processed_csv_path=processed_csv_path,
     )
+
+
+def _process_raw_results(
+    *,
+    config: ModelBatchConfig,
+    raw_entries: list[dict[str, Any]],
+    manifest_rows: list[dict[str, Any]],
+    batch_id: str,
+    include_all_cols: bool,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Parse provider results and build canonical annotation rows."""
+
+    manifest_by_custom_id = {str(row["custom_id"]): row for row in manifest_rows}
+    processed_rows: list[dict[str, Any]] = []
+    processing_errors: list[dict[str, Any]] = []
+    itemwise_results: list[dict[str, Any]] = []
+    seen_custom_ids: set[str] = set()
+
+    # Parse each provider result independently so failures retain their request ids.
+    for entry in raw_entries:
+        try:
+            custom_id, response_text, response_metadata, response_error = _extract_stored_result(
+                config.model.provider, entry
+            )
+        except Exception as exc:  # noqa: BLE001
+            processing_errors.append(
+                {
+                    "custom_id": _result_entry_custom_id(config.model.provider, entry),
+                    "error": f"Provider result extraction failed: {exc}",
+                    "error_type": "provider_response_format_error",
+                    "raw_result": entry,
+                }
+            )
+            continue
+
+        seen_custom_ids.add(custom_id)
+        manifest_row = manifest_by_custom_id.get(custom_id)
+        if manifest_row is None:
+            processing_errors.append(
+                {
+                    "custom_id": custom_id,
+                    "error": "Result returned an unknown custom_id",
+                    "raw_result": entry,
+                }
+            )
+            continue
+
+        if response_error is not None:
+            processing_errors.append(
+                {
+                    "custom_id": custom_id,
+                    "comment_id": manifest_row["comment_id"],
+                    "item_name": manifest_row.get("item_name"),
+                    "error": response_error,
+                    "raw_result": entry,
+                }
+            )
+            continue
+
+        try:
+            payload = _parse_response_json(response_text)
+            if config.prompt.mode == "item_by_item":
+                itemwise_results.append(
+                    _normalize_itemwise_result(
+                        manifest_row=manifest_row,
+                        payload=payload,
+                        response_metadata=response_metadata,
+                    )
+                )
+                continue
+
+            record = normalize_model_annotation(
+                comment_id=int(manifest_row["comment_id"]),
+                judge_id=_judge_id(config),
+                text=str(manifest_row["text"]),
+                payload=payload,
+                metadata={
+                    "provider": config.model.provider,
+                    "model": config.model.name,
+                    "batch_id": batch_id,
+                    "custom_id": custom_id,
+                    "provider_response": response_metadata,
+                },
+            )
+            processed_rows.append(
+                annotation_record_to_row(record, include_metadata=include_all_cols)
+            )
+        except Exception as exc:  # noqa: BLE001
+            processing_error = _build_processing_error_record(
+                provider_name=config.model.provider,
+                custom_id=custom_id,
+                comment_id=manifest_row["comment_id"],
+                response_text=response_text,
+                response_metadata=response_metadata,
+                exception=exc,
+            )
+            if manifest_row.get("item_name") is not None:
+                processing_error["item_name"] = manifest_row["item_name"]
+            processing_error["raw_result"] = entry
+            processing_errors.append(processing_error)
+
+    if config.prompt.mode == "item_by_item":
+        # Missing results must remain retryable at the individual comment-item level.
+        for custom_id, manifest_row in manifest_by_custom_id.items():
+            if custom_id not in seen_custom_ids:
+                processing_errors.append(
+                    {
+                        "custom_id": custom_id,
+                        "comment_id": manifest_row["comment_id"],
+                        "item_name": manifest_row["item_name"],
+                        "error": "Batch result did not include this request",
+                        "error_type": "missing_batch_result",
+                    }
+                )
+        processed_rows = _aggregate_itemwise_results(
+            config=config,
+            itemwise_results=itemwise_results,
+            batch_id=batch_id,
+            include_all_cols=include_all_cols,
+        )
+
+    return processed_rows, processing_errors
+
+
+def _extract_stored_result(
+    provider_name: str,
+    entry: dict[str, Any],
+) -> tuple[str, str, dict[str, Any], str | None]:
+    """Extract either a provider batch result or a stored direct-retry result."""
+
+    if "response_text" in entry and entry.get("custom_id") is not None:
+        # Direct retries use a provider-neutral envelope stored in the canonical raw file.
+        return (
+            str(entry["custom_id"]),
+            str(entry.get("response_text", "")),
+            dict(entry.get("provider_response") or {}),
+            str(entry["response_error"]) if entry.get("response_error") is not None else None,
+        )
+    return _result_extractor(provider_name)(entry)
+
+
+def _normalize_itemwise_result(
+    *,
+    manifest_row: dict[str, Any],
+    payload: dict[str, Any],
+    response_metadata: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate one itemwise payload while retaining its item-level provenance."""
+
+    item_name = str(manifest_row["item_name"])
+    target_groups = payload.get("target_groups")
+    if not isinstance(target_groups, list) or not target_groups:
+        raise ValueError("target_groups must be a non-empty JSON array")
+    normalized_targets = []
+    for group in target_groups:
+        if not isinstance(group, str) or group.upper() not in TARGET_GROUP_CODES:
+            raise ValueError(f"target_groups contains invalid code: {group}")
+        normalized_targets.append(group.upper())
+    # Target groups are sets semantically, so canonicalize order before finding the mode.
+    normalized_targets = [
+        group_code for group_code in TARGET_GROUP_CODES if group_code in set(normalized_targets)
+    ]
+
+    if item_name not in payload:
+        raise ValueError(f"Itemwise response is missing {item_name}")
+    response = str(payload[item_name]).upper()
+    if response not in ITEM_RESPONSE_LETTERS[item_name]:
+        raise ValueError(f"{item_name} has invalid response letter: {response}")
+
+    return {
+        "custom_id": str(manifest_row["custom_id"]),
+        "comment_id": int(manifest_row["comment_id"]),
+        "text": str(manifest_row["text"]),
+        "item_name": item_name,
+        "response": response,
+        "target_groups": normalized_targets,
+        "provider_response": response_metadata,
+    }
+
+
+def _aggregate_itemwise_results(
+    *,
+    config: ModelBatchConfig,
+    itemwise_results: list[dict[str, Any]],
+    batch_id: str,
+    include_all_cols: bool,
+) -> list[dict[str, Any]]:
+    """Combine complete sets of ten independent item ratings into wide rows."""
+
+    grouped: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    for result in itemwise_results:
+        grouped[int(result["comment_id"])].append(result)
+
+    rows: list[dict[str, Any]] = []
+    for comment_id in sorted(grouped):
+        results = grouped[comment_id]
+        by_item = {str(result["item_name"]): result for result in results}
+        # Do not emit a partially annotated comment into the canonical dataset.
+        if len(by_item) != len(results) or set(by_item) != set(ITEM_NAMES):
+            continue
+
+        ordered_results = [by_item[item_name] for item_name in ITEM_NAMES]
+        payload = {
+            "target_groups": _modal_target_groups(ordered_results),
+            **{item_name: by_item[item_name]["response"] for item_name in ITEM_NAMES},
+        }
+        record = normalize_model_annotation(
+            comment_id=comment_id,
+            judge_id=_judge_id(config),
+            text=str(ordered_results[0]["text"]),
+            payload=payload,
+            metadata={
+                "provider": config.model.provider,
+                "model": config.model.name,
+                "batch_id": batch_id,
+                "prompt_mode": "item_by_item",
+                "target_groups_by_item": {
+                    item_name: by_item[item_name]["target_groups"] for item_name in ITEM_NAMES
+                },
+                "custom_ids_by_item": {
+                    item_name: by_item[item_name]["custom_id"] for item_name in ITEM_NAMES
+                },
+                "provider_responses_by_item": {
+                    item_name: by_item[item_name]["provider_response"] for item_name in ITEM_NAMES
+                },
+            },
+        )
+        rows.append(annotation_record_to_row(record, include_metadata=include_all_cols))
+    return rows
+
+
+def _modal_target_groups(ordered_results: list[dict[str, Any]]) -> list[str]:
+    """Choose the most frequent exact target-group set with stable item-order ties."""
+
+    target_sets = [tuple(result["target_groups"]) for result in ordered_results]
+    counts = Counter(target_sets)
+    highest_count = max(counts.values())
+    selected = next(target_set for target_set in target_sets if counts[target_set] == highest_count)
+    return list(selected)
 
 
 def launch_batches(config_path: Path) -> tuple[LaunchBatchOutputs, ...]:
@@ -524,40 +709,120 @@ def _build_requests(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Build a manifest plus the provider-specific requests for a batch launch."""
 
-    system_prompt = config.prompt.system_prompt_path.read_text()
+    system_prompt_template = config.prompt.system_prompt_path.read_text()
+    itemwise_items = _load_itemwise_prompt_items(config)
     request_manifest: list[dict[str, Any]] = []
     provider_requests: list[dict[str, Any]] = []
 
     for comment in comments:
         comment_id = int(comment["comment_id"])
         comment_text = str(comment["text"])
-        custom_id = f"comment-{comment_id}"
         if config.prompt.user_prompt_template.strip():
             user_prompt = config.prompt.user_prompt_template.format(comment_text=comment_text)
         else:
             user_prompt = comment_text
-        request_manifest.append(
-            {
+        request_items = itemwise_items or [None]
+        for item in request_items:
+            item_name = str(item["name"]) if item is not None else None
+            custom_id = f"comment-{comment_id}"
+            system_prompt = system_prompt_template
+            if item is not None:
+                custom_id = f"{custom_id}--{item_name}"
+                system_prompt = _render_itemwise_system_prompt(system_prompt_template, item)
+
+            manifest_row: dict[str, Any] = {
                 "custom_id": custom_id,
                 "comment_id": comment_id,
                 "text": comment_text,
             }
-        )
-        provider_requests.append(
-            _provider_request(
-                provider_name=config.model.provider,
-                custom_id=custom_id,
-                model=config.model.name,
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                max_tokens=config.model.max_tokens,
-                model_params=config.model.params,
-                reasoning_effort=config.model.reasoning.effort,
-                reasoning_budget_tokens=config.model.reasoning.budget_tokens,
-                comment_id=comment_id,
+            if item_name is not None:
+                manifest_row["item_name"] = item_name
+            request_manifest.append(manifest_row)
+            provider_requests.append(
+                _provider_request(
+                    provider_name=config.model.provider,
+                    custom_id=custom_id,
+                    model=config.model.name,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    max_tokens=config.model.max_tokens,
+                    model_params=config.model.params,
+                    reasoning_effort=config.model.reasoning.effort,
+                    reasoning_budget_tokens=config.model.reasoning.budget_tokens,
+                    comment_id=comment_id,
+                )
             )
-        )
     return request_manifest, provider_requests
+
+
+def _load_itemwise_prompt_items(config: ModelBatchConfig) -> list[dict[str, Any]]:
+    """Load and validate the versioned survey-item definitions for itemwise mode."""
+
+    if config.prompt.mode != "item_by_item":
+        return []
+    if config.prompt.items_path is None:
+        raise ValueError("prompt.items_path is required for item_by_item mode")
+
+    payload = yaml.safe_load(config.prompt.items_path.read_text())
+    raw_items = payload.get("items") if isinstance(payload, dict) else None
+    if not isinstance(raw_items, list):
+        raise ValueError("Itemwise prompt asset must contain an 'items' list")
+
+    # Validate the asset against the shared schema before creating provider requests.
+    items: list[dict[str, Any]] = []
+    for raw_item in raw_items:
+        if not isinstance(raw_item, dict):
+            raise ValueError("Each itemwise prompt definition must be a mapping")
+        item_name = str(raw_item.get("name", ""))
+        if item_name not in ITEM_NAMES:
+            raise ValueError(f"Unsupported itemwise prompt item: {item_name}")
+        options = raw_item.get("options")
+        if not isinstance(options, dict):
+            raise ValueError(f"Itemwise prompt options for {item_name} must be a mapping")
+        if tuple(str(letter) for letter in options) != ITEM_RESPONSE_LETTERS[item_name]:
+            raise ValueError(f"Itemwise prompt options for {item_name} do not match the schema")
+        if raw_item.get("number") is None or not str(raw_item.get("question", "")).strip():
+            raise ValueError(f"Itemwise prompt definition for {item_name} is incomplete")
+        items.append(dict(raw_item))
+
+    if tuple(str(item["name"]) for item in items) != ITEM_NAMES:
+        raise ValueError("Itemwise prompt items must appear once each in canonical item order")
+    return items
+
+
+def _render_itemwise_system_prompt(template: str, item: dict[str, Any]) -> str:
+    """Render the shared itemwise template for one survey item definition."""
+
+    item_name = str(item["name"])
+    options = item["options"]
+    # Render options and JSON separately so literal braces never collide with template fields.
+    item_options = "\n".join(f"{letter}. {label}" for letter, label in options.items())
+    response_format = json.dumps(
+        {"target_groups": ["LETTER"], item_name: "LETTER"},
+        indent=2,
+    )
+    return template.format(
+        item_name=item_name,
+        item_number=item["number"],
+        item_question=str(item["question"]),
+        item_options=item_options,
+        response_format=response_format,
+    )
+
+
+def _render_system_prompt_for_manifest(
+    config: ModelBatchConfig,
+    template: str,
+    manifest_row: dict[str, Any],
+) -> str:
+    """Render the correct system prompt for an original manifest row."""
+
+    if config.prompt.mode != "item_by_item":
+        return template
+    # Recover the exact prompt from the manifest item rather than relying on list position.
+    item_name = str(manifest_row["item_name"])
+    items_by_name = {str(item["name"]): item for item in _load_itemwise_prompt_items(config)}
+    return _render_itemwise_system_prompt(template, items_by_name[item_name])
 
 
 def _provider_request(

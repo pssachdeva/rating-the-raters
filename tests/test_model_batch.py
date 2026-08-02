@@ -10,6 +10,7 @@ from mhs_llms.batch import (
     _download_provider_results,
     _select_comment_ids,
     _apply_google_batch_reasoning,
+    _process_raw_results,
     write_combined_processed_annotations,
     write_processed_annotations,
 )
@@ -442,6 +443,122 @@ def test_build_requests_uses_raw_comment_when_user_prompt_template_is_empty() ->
 
     assert provider_requests[0]["body"]["messages"][1]["content"] == "just the comment"
     assert provider_requests[0]["body"]["max_completion_tokens"] == 400
+
+
+def test_build_requests_fans_each_comment_out_to_ten_itemwise_requests() -> None:
+    config = ModelBatchConfig(
+        name="itemwise",
+        prompt=BatchPromptConfig(
+            system_prompt_path=Path("prompts/mhs_survey_itemwise_v1.txt"),
+            user_prompt_template="",
+            mode="item_by_item",
+            items_path=Path("prompts/mhs_survey_items_v1.yaml"),
+        ),
+        model=BatchModelConfig(provider="openai", name="gpt-5.4", max_tokens=500),
+        batches=BatchStorageConfig(
+            run_dir=Path("batches/itemwise"),
+            request_manifest_filename="request_manifest.jsonl",
+            provider_requests_filename="provider_requests.jsonl",
+            batch_metadata_filename="batch_job.json",
+            raw_results_filename="raw_results.jsonl",
+            processed_records_filename="processed_records.jsonl",
+            processed_csv_filename="processed_records.csv",
+            errors_filename="processing_errors.jsonl",
+        ),
+    )
+
+    manifest, requests = _build_requests(
+        config=config,
+        comments=[{"comment_id": 7, "text": "example comment"}],
+    )
+
+    assert len(manifest) == 10
+    assert len(requests) == 10
+    assert manifest[0]["custom_id"] == "comment-7--sentiment"
+    assert manifest[-1]["custom_id"] == "comment-7--hate_speech"
+    assert [row["item_name"] for row in manifest] == [
+        "sentiment",
+        "respect",
+        "insult",
+        "humiliate",
+        "status",
+        "dehumanize",
+        "violence",
+        "genocide",
+        "attack_defend",
+        "hate_speech",
+    ]
+    sentiment_prompt = requests[0]["body"]["messages"][0]["content"]
+    assert "How would you describe the sentiment" in sentiment_prompt
+    assert "calls for using violence" not in sentiment_prompt
+
+
+def test_process_raw_results_aggregates_only_complete_itemwise_sets() -> None:
+    config = ModelBatchConfig(
+        name="itemwise",
+        prompt=BatchPromptConfig(
+            system_prompt_path=Path("prompts/mhs_survey_itemwise_v1.txt"),
+            user_prompt_template="",
+            mode="item_by_item",
+            items_path=Path("prompts/mhs_survey_items_v1.yaml"),
+        ),
+        model=BatchModelConfig(provider="openai", name="gpt-5.4", id="openai_gpt-5.4"),
+        batches=BatchStorageConfig(
+            run_dir=Path("batches/itemwise"),
+            request_manifest_filename="request_manifest.jsonl",
+            provider_requests_filename="provider_requests.jsonl",
+            batch_metadata_filename="batch_job.json",
+            raw_results_filename="raw_results.jsonl",
+            processed_records_filename="processed_records.jsonl",
+            processed_csv_filename="processed_records.csv",
+            errors_filename="processing_errors.jsonl",
+        ),
+    )
+    manifest, _ = _build_requests(
+        config=config,
+        comments=[{"comment_id": 7, "text": "example comment"}],
+    )
+    raw_entries = []
+    for index, row in enumerate(manifest):
+        item_name = row["item_name"]
+        raw_entries.append(
+            {
+                "custom_id": row["custom_id"],
+                "response_text": json.dumps(
+                    {
+                        "target_groups": ["B"] if index == 9 else ["A"],
+                        item_name: "A",
+                    }
+                ),
+                "provider_response": {"usage": {"output_tokens": 1}},
+            }
+        )
+
+    rows, errors = _process_raw_results(
+        config=config,
+        raw_entries=raw_entries,
+        manifest_rows=manifest,
+        batch_id="batch-1",
+        include_all_cols=True,
+    )
+
+    assert errors == []
+    assert len(rows) == 1
+    assert rows[0]["target_groups"] == '["A"]'
+    assert rows[0]["hate_speech"] == "A"
+    metadata = json.loads(rows[0]["metadata"])
+    assert metadata["target_groups_by_item"]["hate_speech"] == ["B"]
+
+    incomplete_rows, incomplete_errors = _process_raw_results(
+        config=config,
+        raw_entries=raw_entries[:-1],
+        manifest_rows=manifest,
+        batch_id="batch-1",
+        include_all_cols=False,
+    )
+    assert incomplete_rows == []
+    assert incomplete_errors[0]["custom_id"] == "comment-7--hate_speech"
+    assert incomplete_errors[0]["error_type"] == "missing_batch_result"
 
 
 def test_build_requests_for_anthropic_follow_openai_config_shape() -> None:

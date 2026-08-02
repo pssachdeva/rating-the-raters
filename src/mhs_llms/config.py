@@ -43,6 +43,8 @@ class HumanBaselineConfig:
 class BatchPromptConfig:
     system_prompt_path: Path
     user_prompt_template: str = "SOCIAL MEDIA COMMENT:\n{comment_text}"
+    mode: str = "all_items"
+    items_path: Optional[Path] = None
 
 
 @dataclass(frozen=True)
@@ -206,9 +208,17 @@ def _load_yaml_config(config_path: Path) -> dict[str, Any]:
 def _parse_batch_prompt_config(prompt_data: dict[str, Any]) -> BatchPromptConfig:
     """Parse the shared prompt settings for batch launches."""
 
+    mode = str(prompt_data.get("mode", "all_items"))
+    if mode not in {"all_items", "item_by_item"}:
+        raise ValueError("prompt.mode must be either 'all_items' or 'item_by_item'")
+    items_path = prompt_data.get("items_path")
+    if mode == "item_by_item" and items_path is None:
+        raise ValueError("prompt.items_path is required for item_by_item mode")
     return BatchPromptConfig(
         system_prompt_path=_resolve_path(prompt_data["system_prompt_path"]),
         user_prompt_template=str(prompt_data.get("user_prompt_template", "")),
+        mode=mode,
+        items_path=_resolve_path(items_path) if items_path is not None else None,
     )
 
 

@@ -279,10 +279,12 @@ def _provider_order(provider_slugs: list[str]) -> list[str]:
         "xai",
         "deepseek",
         "minimax",
+        "meta",
         "moonshotai",
         "qwen",
         "xiaomi",
         "zai",
+        "together",
         "openrouter",
         "unknown",
     ]

@@ -7,9 +7,11 @@ import numpy as np
 import pandas as pd
 
 from mhs_llms.dataset import load_mhs_dataframe
+from mhs_llms.constants import HUMAN_FACETS_RECODE_MAP
 from mhs_llms.plotting import format_plot_text, save_figure
 from mhs_llms.schema import ITEM_NAMES
 from mhs_llms.score_distribution import align_item_responses, read_annotation_table
+from mhs_llms.utils import recode_responses
 
 
 ITEM_DISPLAY_LABELS = {
@@ -26,6 +28,137 @@ ITEM_DISPLAY_LABELS = {
 }
 
 AGREEMENT_GROUP_ORDER = ("Humans", "LLMs", "Humans + LLMs")
+
+
+def quadratic_weighted_kappa(left: pd.Series, right: pd.Series) -> float:
+    """Calculate quadratic-weighted Cohen's kappa for two ordinal rating series."""
+
+    paired = pd.concat([left, right], axis=1).dropna()
+    if paired.empty:
+        return float("nan")
+
+    left_values = paired.iloc[:, 0].astype(int).to_numpy()
+    right_values = paired.iloc[:, 1].astype(int).to_numpy()
+    minimum = int(min(left_values.min(), right_values.min()))
+    maximum = int(max(left_values.max(), right_values.max()))
+    category_count = maximum - minimum + 1
+    if category_count <= 1:
+        return float("nan")
+
+    left_values = left_values - minimum
+    right_values = right_values - minimum
+    observed = np.zeros((category_count, category_count), dtype=float)
+    np.add.at(observed, (left_values, right_values), 1.0)
+    left_counts = np.bincount(left_values, minlength=category_count)
+    right_counts = np.bincount(right_values, minlength=category_count)
+    expected = np.outer(left_counts, right_counts) / len(left_values)
+    weights = np.fromfunction(
+        lambda left_index, right_index: (
+            (left_index - right_index) / (category_count - 1)
+        )
+        ** 2,
+        (category_count, category_count),
+    )
+    expected_disagreement = float((weights * expected).sum())
+    if expected_disagreement == 0.0:
+        return float("nan")
+    return 1.0 - float((weights * observed).sum()) / expected_disagreement
+
+
+def build_llm_human_consensus_agreement(
+    llm_annotations: pd.DataFrame,
+    human_annotations: pd.DataFrame,
+    reference_comment_ids: list[int],
+    item_names: tuple[str, ...] = ITEM_NAMES,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Compare each LLM with the median collapsed human response for every item."""
+
+    llm_frame = prepare_agreement_annotations(
+        annotation_frame=llm_annotations,
+        reference_comment_ids=reference_comment_ids,
+        annotator_prefix="llm",
+    )
+    human_frame = prepare_agreement_annotations(
+        annotation_frame=human_annotations,
+        reference_comment_ids=reference_comment_ids,
+        annotator_prefix="human",
+    )
+    llm_frame = recode_responses(llm_frame, **HUMAN_FACETS_RECODE_MAP)
+    human_frame = recode_responses(human_frame, **HUMAN_FACETS_RECODE_MAP)
+
+    # Resolve the two possible half-category medians upward to an observed category.
+    consensus = human_frame.groupby("comment_id", as_index=False)[list(item_names)].median()
+    consensus.loc[:, list(item_names)] = np.floor(consensus.loc[:, list(item_names)] + 0.5)
+
+    rows = []
+    for judge_id, judge_frame in llm_frame.groupby("judge_id", sort=True):
+        for item_name in item_names:
+            paired = judge_frame[["comment_id", item_name]].dropna().merge(
+                consensus[["comment_id", item_name]],
+                on="comment_id",
+                suffixes=("_llm", "_human"),
+            )
+            llm_values = paired[f"{item_name}_llm"].astype(int)
+            human_values = paired[f"{item_name}_human"].astype(int)
+            differences = llm_values - human_values
+            rows.append(
+                {
+                    "judge_id": judge_id.removeprefix("llm:"),
+                    "item_name": item_name,
+                    "item_label": ITEM_DISPLAY_LABELS[item_name],
+                    "num_pairs": len(paired),
+                    "exact_agreement": float((differences == 0).mean()),
+                    "quadratic_weighted_kappa": quadratic_weighted_kappa(
+                        llm_values, human_values
+                    ),
+                    "signed_mean_difference": float(differences.mean()),
+                    "mean_absolute_difference": float(differences.abs().mean()),
+                }
+            )
+
+    detail = pd.DataFrame(rows)
+    summary_rows = []
+    for item_name in item_names:
+        item_detail = detail.loc[detail["item_name"] == item_name]
+        summary_rows.append(
+            {
+                "item_name": item_name,
+                "item_label": ITEM_DISPLAY_LABELS[item_name],
+                "num_models": int(item_detail["judge_id"].nunique()),
+                "num_pairs": int(item_detail["num_pairs"].sum()),
+                "exact_agreement": float(
+                    np.average(
+                        item_detail["exact_agreement"],
+                        weights=item_detail["num_pairs"],
+                    )
+                ),
+                "mean_model_quadratic_weighted_kappa": float(
+                    item_detail["quadratic_weighted_kappa"].mean()
+                ),
+                "median_model_quadratic_weighted_kappa": float(
+                    item_detail["quadratic_weighted_kappa"].median()
+                ),
+                "minimum_model_quadratic_weighted_kappa": float(
+                    item_detail["quadratic_weighted_kappa"].min()
+                ),
+                "maximum_model_quadratic_weighted_kappa": float(
+                    item_detail["quadratic_weighted_kappa"].max()
+                ),
+                "signed_mean_difference": float(
+                    np.average(
+                        item_detail["signed_mean_difference"],
+                        weights=item_detail["num_pairs"],
+                    )
+                ),
+                "mean_absolute_difference": float(
+                    np.average(
+                        item_detail["mean_absolute_difference"],
+                        weights=item_detail["num_pairs"],
+                    )
+                ),
+            }
+        )
+    return detail, pd.DataFrame(summary_rows)
 
 
 def load_annotation_files(paths: list[Path]) -> pd.DataFrame:

@@ -23,8 +23,11 @@ from mhs_llms.batch import (
     _coerce_openai_content_to_text,
     _judge_id,
     _parse_response_json,
+    _process_raw_results,
     _provider_api_key,
     _read_jsonl,
+    _render_system_prompt_for_manifest,
+    _normalize_itemwise_result,
     _to_jsonable,
     _write_json,
     _write_jsonl,
@@ -266,29 +269,44 @@ def _retry_errored_for_config(
         },
     )
 
-    merged_raw_results, merged_rows, remaining_errors = _apply_retry_results_to_original_run(
-        manifest_rows=manifest_rows,
-        original_raw_results_path=original_raw_results_path,
-        original_processed_records_path=original_processed_records_path,
-        original_processed_csv_path=original_processed_csv_path,
-        original_errors_path=errors_path,
-        original_metadata_path=original_metadata_path,
-        raw_retry_results=raw_retry_results,
-        retry_rows=processed_rows,
-        retry_errors=processing_errors,
-        retry_metadata={
-            "retry_run_dir": str(retry_run_dir),
-            "retried_count": len(retry_manifest_rows),
-            "retry_success_count": len(processed_rows),
-            "retry_error_count": len(processing_errors),
-            "overrides": {
-                "max_tokens": max_tokens,
-                "budget_tokens": budget_tokens,
-                "effort": effort,
-                "concurrency": concurrency,
-            },
+    retry_metadata = {
+        "retry_run_dir": str(retry_run_dir),
+        "retried_count": len(retry_manifest_rows),
+        "retry_success_count": len(processed_rows),
+        "retry_error_count": len(processing_errors),
+        "overrides": {
+            "max_tokens": max_tokens,
+            "budget_tokens": budget_tokens,
+            "effort": effort,
+            "concurrency": concurrency,
         },
-    )
+    }
+    if config.prompt.mode == "item_by_item":
+        merged_raw_results, merged_rows, remaining_errors = _rebuild_itemwise_original_run(
+            config=config,
+            manifest_rows=manifest_rows,
+            original_raw_results_path=original_raw_results_path,
+            original_processed_records_path=original_processed_records_path,
+            original_processed_csv_path=original_processed_csv_path,
+            original_errors_path=errors_path,
+            original_metadata_path=original_metadata_path,
+            raw_retry_results=raw_retry_results,
+            retry_metadata=retry_metadata,
+            include_all_cols=include_all_cols,
+        )
+    else:
+        merged_raw_results, merged_rows, remaining_errors = _apply_retry_results_to_original_run(
+            manifest_rows=manifest_rows,
+            original_raw_results_path=original_raw_results_path,
+            original_processed_records_path=original_processed_records_path,
+            original_processed_csv_path=original_processed_csv_path,
+            original_errors_path=errors_path,
+            original_metadata_path=original_metadata_path,
+            raw_retry_results=raw_retry_results,
+            retry_rows=processed_rows,
+            retry_errors=processing_errors,
+            retry_metadata=retry_metadata,
+        )
     _write_jsonl(retry_run_dir / "merged_raw_results.jsonl", merged_raw_results)
     _write_jsonl(retry_run_dir / "remaining_errors.jsonl", remaining_errors)
     _write_jsonl(merged_processed_records_path, merged_rows)
@@ -304,6 +322,51 @@ def _retry_errored_for_config(
         merged_processed_records_path=original_processed_records_path,
         merged_processed_csv_path=original_processed_csv_path,
     )
+
+
+def _rebuild_itemwise_original_run(
+    *,
+    config: ModelBatchConfig,
+    manifest_rows: list[dict[str, Any]],
+    original_raw_results_path: Path,
+    original_processed_records_path: Path,
+    original_processed_csv_path: Path,
+    original_errors_path: Path,
+    original_metadata_path: Path,
+    raw_retry_results: list[dict[str, Any]],
+    retry_metadata: dict[str, Any],
+    include_all_cols: bool,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Reprocess all item results after replacing only the directly retried requests."""
+
+    original_raw_results = (
+        _read_jsonl(original_raw_results_path) if original_raw_results_path.exists() else []
+    )
+    # Replace successful retry envelopes by custom id, leaving the other nine items untouched.
+    merged_raw_results = _merge_raw_results(
+        original_rows=original_raw_results,
+        retry_rows=raw_retry_results,
+        manifest_rows=manifest_rows,
+    )
+    original_metadata = _read_existing_json(original_metadata_path)
+    # Re-aggregate from raw results so a repaired tenth item restores the complete wide row.
+    merged_rows, remaining_errors = _process_raw_results(
+        config=config,
+        raw_entries=merged_raw_results,
+        manifest_rows=manifest_rows,
+        batch_id=str(original_metadata.get("batch_id", "")),
+        include_all_cols=include_all_cols,
+    )
+
+    _write_jsonl(original_raw_results_path, merged_raw_results)
+    _write_jsonl(original_processed_records_path, merged_rows)
+    pd.DataFrame(merged_rows).to_csv(original_processed_csv_path, index=False)
+    _write_jsonl(original_errors_path, remaining_errors)
+    original_metadata["direct_retry"] = retry_metadata
+    original_metadata["processed_row_count"] = len(merged_rows)
+    original_metadata["processing_error_count"] = len(remaining_errors)
+    _write_json(original_metadata_path, original_metadata)
+    return merged_raw_results, merged_rows, remaining_errors
 
 
 def _retry_one_manifest_row(
@@ -322,9 +385,14 @@ def _retry_one_manifest_row(
     comment_id = int(manifest_row["comment_id"])
     comment_text = str(manifest_row["text"])
     user_prompt = _user_prompt(config=config, comment_text=comment_text)
+    rendered_system_prompt = _render_system_prompt_for_manifest(
+        config=config,
+        template=system_prompt,
+        manifest_row=manifest_row,
+    )
     request_payload = _build_direct_provider_request(
         config=config,
-        system_prompt=system_prompt,
+        system_prompt=rendered_system_prompt,
         user_prompt=user_prompt,
     )
     logger.info(
@@ -348,6 +416,13 @@ def _retry_one_manifest_row(
             "response_text": response_text,
         }
         payload = _parse_response_json(response_text)
+        if config.prompt.mode == "item_by_item":
+            partial_row = _normalize_itemwise_result(
+                manifest_row=manifest_row,
+                payload=payload,
+                response_metadata=provider_response,
+            )
+            return raw_result, partial_row, None
         record = normalize_model_annotation(
             comment_id=comment_id,
             judge_id=_judge_id(config),

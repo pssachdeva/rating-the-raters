@@ -47,6 +47,31 @@ batches:
     assert config.batches.run_dir == (Path.cwd() / "batches" / "openai_gpt-5.4_low").resolve()
 
 
+def test_load_model_batch_config_supports_itemwise_prompt_assets(tmp_path: Path) -> None:
+    config_path = tmp_path / "itemwise.yaml"
+    config_path.write_text(
+        """
+name: itemwise
+prompt:
+  mode: item_by_item
+  system_prompt_path: prompts/mhs_survey_itemwise_v1.txt
+  items_path: prompts/mhs_survey_items_v1.yaml
+model:
+  provider: openai
+  name: gpt-5.4
+batches:
+  run_dir: batches/itemwise
+""".strip()
+    )
+
+    config = load_model_batch_config(config_path)
+
+    assert config.prompt.mode == "item_by_item"
+    assert config.prompt.items_path == (
+        Path.cwd() / "prompts" / "mhs_survey_items_v1.yaml"
+    ).resolve()
+
+
 def test_load_model_batch_config_supports_anthropic_shape(tmp_path: Path) -> None:
     config_path = tmp_path / "anthropic_single.yaml"
     config_path.write_text(

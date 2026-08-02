@@ -22,11 +22,15 @@ from mhs_llms.batch import (
     _coerce_google_response_to_text,
     _coerce_openai_content_to_text,
     _judge_id,
+    _aggregate_itemwise_results,
     _load_batch_comments,
+    _load_itemwise_prompt_items,
     _model_id,
+    _normalize_itemwise_result,
     _parse_response_json,
     _provider_api_key,
     _read_jsonl,
+    _render_itemwise_system_prompt,
     _looks_like_model_refusal,
     _to_jsonable,
     _utcnow,
@@ -202,6 +206,7 @@ def launch_async_for_config(
             "provider": config.model.provider,
             "model": config.model.name,
             "judge_id": _judge_id(config),
+            "prompt_mode": config.prompt.mode,
             "request_count": len(request_rows),
             "completed_count": completed_count,
             "skipped_existing_count": skipped_existing_count,
@@ -347,6 +352,11 @@ def _run_one_async_request_with_retries(
                     "judge_id": _judge_id(config),
                     "custom_id": request_row["custom_id"],
                     "comment_id": request_row["comment_id"],
+                    **(
+                        {"item_name": request_row["manifest"]["item_name"]}
+                        if request_row["manifest"].get("item_name") is not None
+                        else {}
+                    ),
                     "text": request_row["text"],
                     "system_prompt": request_row["system_prompt"],
                     "user_prompt": request_row["user_prompt"],
@@ -439,6 +449,7 @@ def process_async_for_config(
 
     processed_rows: list[dict[str, Any]] = []
     processing_errors: list[dict[str, Any]] = []
+    itemwise_results: list[dict[str, Any]] = []
     completed_count = 0
 
     for manifest_row in manifest_rows:
@@ -451,6 +462,15 @@ def process_async_for_config(
         response_text = str(response_payload.get("response_text", ""))
         try:
             payload = _parse_response_json(response_text)
+            if config.prompt.mode == "item_by_item":
+                itemwise_results.append(
+                    _normalize_itemwise_result(
+                        manifest_row=manifest_row,
+                        payload=payload,
+                        response_metadata=response_payload.get("provider_response") or {},
+                    )
+                )
+                continue
             record = normalize_model_annotation(
                 comment_id=int(manifest_row["comment_id"]),
                 judge_id=_judge_id(config),
@@ -475,7 +495,18 @@ def process_async_for_config(
                 exception=exc,
             )
             processing_error["response_path"] = str(response_path)
+            if manifest_row.get("item_name") is not None:
+                processing_error["item_name"] = manifest_row["item_name"]
             processing_errors.append(processing_error)
+
+    if config.prompt.mode == "item_by_item":
+        # Match batch processing: only complete ten-item sets become canonical rows.
+        processed_rows = _aggregate_itemwise_results(
+            config=config,
+            itemwise_results=itemwise_results,
+            batch_id="async",
+            include_all_cols=include_all_cols,
+        )
 
     _write_jsonl(paths.processed_records_path, processed_rows)
     pd.DataFrame(processed_rows).to_csv(paths.processed_csv_path, index=False)
@@ -490,6 +521,7 @@ def process_async_for_config(
             "provider": config.model.provider,
             "model": config.model.name,
             "judge_id": _judge_id(config),
+            "prompt_mode": config.prompt.mode,
             "request_count": len(manifest_rows),
             "completed_count": completed_count,
             "processed_row_count": len(processed_rows),
@@ -540,38 +572,50 @@ def _async_storage_paths(config: ModelBatchConfig) -> AsyncStoragePaths:
 def _build_async_request_rows(config: ModelBatchConfig) -> list[dict[str, Any]]:
     """Build deterministic per-comment provider requests for sequential async execution."""
 
-    system_prompt = config.prompt.system_prompt_path.read_text()
+    system_prompt_template = config.prompt.system_prompt_path.read_text()
+    itemwise_items = _load_itemwise_prompt_items(config)
     comments = _load_batch_comments(config)
     request_rows: list[dict[str, Any]] = []
 
     for comment in comments:
         comment_id = int(comment["comment_id"])
         comment_text = str(comment["text"])
-        custom_id = f"comment-{comment_id}"
         if config.prompt.user_prompt_template.strip():
             user_prompt = config.prompt.user_prompt_template.format(comment_text=comment_text)
         else:
             user_prompt = comment_text
 
-        request_rows.append(
-            {
+        request_items = itemwise_items or [None]
+        for item in request_items:
+            item_name = str(item["name"]) if item is not None else None
+            custom_id = f"comment-{comment_id}"
+            system_prompt = system_prompt_template
+            if item is not None:
+                custom_id = f"{custom_id}--{item_name}"
+                system_prompt = _render_itemwise_system_prompt(system_prompt_template, item)
+
+            manifest: dict[str, Any] = {
                 "custom_id": custom_id,
                 "comment_id": comment_id,
                 "text": comment_text,
-                "system_prompt": system_prompt,
-                "user_prompt": user_prompt,
-                "manifest": {
+            }
+            if item_name is not None:
+                manifest["item_name"] = item_name
+            request_rows.append(
+                {
                     "custom_id": custom_id,
                     "comment_id": comment_id,
                     "text": comment_text,
-                },
-                "provider_request": _build_async_provider_request(
-                    config=config,
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                ),
-            }
-        )
+                    "system_prompt": system_prompt,
+                    "user_prompt": user_prompt,
+                    "manifest": manifest,
+                    "provider_request": _build_async_provider_request(
+                        config=config,
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                    ),
+                }
+            )
     return request_rows
 
 
@@ -960,6 +1004,13 @@ def _validate_async_response(
     """Validate one async provider response against the shared MHS schema."""
 
     payload = _parse_response_json(response_text)
+    if config.prompt.mode == "item_by_item":
+        _normalize_itemwise_result(
+            manifest_row=request_row["manifest"],
+            payload=payload,
+            response_metadata=provider_response or {},
+        )
+        return
     normalize_model_annotation(
         comment_id=int(request_row["comment_id"]),
         judge_id=_judge_id(config),
@@ -1004,6 +1055,8 @@ def _build_async_request_error_record(
             "response_text": response_text,
         }
     error_record["attempt_number"] = attempt_number
+    if request_row["manifest"].get("item_name") is not None:
+        error_record["item_name"] = request_row["manifest"]["item_name"]
     error_record["provider_request"] = request_row["provider_request"]
     error_record["recorded_at"] = _utcnow()
     if provider_response is not None:
