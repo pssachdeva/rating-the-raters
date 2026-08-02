@@ -12,23 +12,39 @@ import pandas as pd
 from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR
 
 
+POOLED_TARGET_TERMS_PATH = DATA_DIR / "full_set_all_models_target_drf_free_judges_target_terms.csv"
 MODEL_TERM_PATHS = {
-    "openai_gpt-5.4_medium": DATA_DIR / "full_set_openai_target_drf_target_terms.csv",
-    "anthropic_claude-opus-4-6_medium": DATA_DIR / "full_set_anthropic_target_drf_target_terms.csv",
-    "google_gemini-3.1-pro-preview_medium": DATA_DIR / "target_drf_google_target_terms.csv",
-    "xai_grok-4-1-fast-reasoning": DATA_DIR / "full_set_xai_target_drf_target_terms.csv",
+    "openai_gpt-5.4_medium": POOLED_TARGET_TERMS_PATH,
+    "anthropic_claude-opus-4-6_medium": POOLED_TARGET_TERMS_PATH,
+    "google_gemini-3.1-pro-preview_medium": POOLED_TARGET_TERMS_PATH,
+    "xai_grok-4-1-fast-reasoning": POOLED_TARGET_TERMS_PATH,
+    "deepseek_deepseek-v4-pro": POOLED_TARGET_TERMS_PATH,
+    "moonshot_kimi-k2.5": POOLED_TARGET_TERMS_PATH,
+    "openrouter_minimax_minimax-m2.5": POOLED_TARGET_TERMS_PATH,
+    "together_openai_gpt-oss-120b": POOLED_TARGET_TERMS_PATH,
+    "together_meta-llama_llama-3.3-70b-instruct-turbo": POOLED_TARGET_TERMS_PATH,
 }
 MODEL_ORDER = [
     "openai_gpt-5.4_medium",
     "anthropic_claude-opus-4-6_medium",
     "google_gemini-3.1-pro-preview_medium",
     "xai_grok-4-1-fast-reasoning",
+    "deepseek_deepseek-v4-pro",
+    "moonshot_kimi-k2.5",
+    "openrouter_minimax_minimax-m2.5",
+    "together_openai_gpt-oss-120b",
+    "together_meta-llama_llama-3.3-70b-instruct-turbo",
 ]
 MODEL_LABELS = {
     "openai_gpt-5.4_medium": "GPT-5.4",
     "anthropic_claude-opus-4-6_medium": "Claude Opus 4.6",
     "google_gemini-3.1-pro-preview_medium": "Gemini 3.1 Pro",
     "xai_grok-4-1-fast-reasoning": "Grok 4.1 Fast",
+    "deepseek_deepseek-v4-pro": "DeepSeek V4 Pro",
+    "moonshot_kimi-k2.5": "Kimi K2.5",
+    "openrouter_minimax_minimax-m2.5": "MiniMax M2.5",
+    "together_openai_gpt-oss-120b": "GPT-OSS 120B",
+    "together_meta-llama_llama-3.3-70b-instruct-turbo": "Llama 3.3 70B",
 }
 TARGET_ORDER = [
     "target_gender_men",
@@ -83,7 +99,7 @@ TARGET_COLOR_CYCLE = [
 ]
 
 OUTPUT_PATH = ARTIFACTS_DIR / "target_drf_betas.png"
-FIGSIZE = (9.2, 3.45)
+FIGSIZE = (9.2, 5.6)
 DPI = 300
 FIGURE_TOP_MARGIN = 0.72
 X_LIMIT_PADDING = 0.12
@@ -109,7 +125,7 @@ DIRECTION_LABEL_SIZE = 8
 LEGEND_FONT_SIZE = 6.6
 TARGET_LEGEND_FONT_SIZE = 7.0
 TARGET_LEGEND_ANCHOR = (0.5, 1.0)
-SIGNIFICANCE_LEGEND_ANCHOR = (0.82, 0.82)
+SIGNIFICANCE_LEGEND_ANCHOR = (0.82, 0.90)
 TARGET_LEGEND_NCOL = 5
 SIGNIFICANCE_LEGEND_NCOL = 2
 TARGET_LEGEND_COLUMN_SPACING = 1.0
@@ -158,6 +174,10 @@ def load_target_drf_terms(data_paths: dict[str, Path], model_order: list[str]) -
         if not data_path.exists():
             raise FileNotFoundError(f"Missing target-DRF terms file: {data_path}")
         frame = pd.read_csv(data_path)
+        if "judge_label" in frame.columns:
+            frame = frame.loc[frame["judge_label"].eq(model_id)].copy()
+            if frame.empty:
+                raise ValueError(f"Missing pooled target-DRF rows for model: {model_id}")
         frame["model_id"] = model_id
         frames.append(frame)
 

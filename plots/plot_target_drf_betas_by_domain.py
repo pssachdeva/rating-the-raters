@@ -14,23 +14,39 @@ from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR
 from mhs_llms.plotting import get_provider_color
 
 
+POOLED_TARGET_TERMS_PATH = DATA_DIR / "full_set_all_models_target_drf_free_judges_target_terms.csv"
 MODEL_TERM_PATHS = {
-    "openai_gpt-5.4_medium": DATA_DIR / "full_set_openai_target_drf_target_terms.csv",
-    "anthropic_claude-opus-4-6_medium": DATA_DIR / "full_set_anthropic_target_drf_target_terms.csv",
-    "google_gemini-3.1-pro-preview_medium": DATA_DIR / "target_drf_google_target_terms.csv",
-    "xai_grok-4-1-fast-reasoning": DATA_DIR / "full_set_xai_target_drf_target_terms.csv",
+    "openai_gpt-5.4_medium": POOLED_TARGET_TERMS_PATH,
+    "anthropic_claude-opus-4-6_medium": POOLED_TARGET_TERMS_PATH,
+    "google_gemini-3.1-pro-preview_medium": POOLED_TARGET_TERMS_PATH,
+    "xai_grok-4-1-fast-reasoning": POOLED_TARGET_TERMS_PATH,
+    "deepseek_deepseek-v4-pro": POOLED_TARGET_TERMS_PATH,
+    "moonshot_kimi-k2.5": POOLED_TARGET_TERMS_PATH,
+    "openrouter_minimax_minimax-m2.5": POOLED_TARGET_TERMS_PATH,
+    "together_openai_gpt-oss-120b": POOLED_TARGET_TERMS_PATH,
+    "together_meta-llama_llama-3.3-70b-instruct-turbo": POOLED_TARGET_TERMS_PATH,
 }
 MODEL_ORDER = [
     "openai_gpt-5.4_medium",
     "anthropic_claude-opus-4-6_medium",
     "google_gemini-3.1-pro-preview_medium",
     "xai_grok-4-1-fast-reasoning",
+    "deepseek_deepseek-v4-pro",
+    "moonshot_kimi-k2.5",
+    "openrouter_minimax_minimax-m2.5",
+    "together_openai_gpt-oss-120b",
+    "together_meta-llama_llama-3.3-70b-instruct-turbo",
 ]
 MODEL_LABELS = {
     "openai_gpt-5.4_medium": "GPT-5.4",
     "anthropic_claude-opus-4-6_medium": "Claude Opus 4.6",
     "google_gemini-3.1-pro-preview_medium": "Gemini 3.1 Pro",
     "xai_grok-4-1-fast-reasoning": "Grok 4.1 Fast",
+    "deepseek_deepseek-v4-pro": "DeepSeek V4 Pro",
+    "moonshot_kimi-k2.5": "Kimi K2.5",
+    "openrouter_minimax_minimax-m2.5": "MiniMax M2.5",
+    "together_openai_gpt-oss-120b": "GPT-OSS 120B",
+    "together_meta-llama_llama-3.3-70b-instruct-turbo": "Llama 3.3 70B",
 }
 IDENTITY_GROUPS = {
     "Gender": [
@@ -64,21 +80,26 @@ TARGET_LABELS = {
 }
 
 OUTPUT_PATH = ARTIFACTS_DIR / "target_drf_betas_by_domain.png"
-FIGSIZE = (8.4, 6.3)
+FIGSIZE = (8.4, 8.0)
 DPI = 300
 COLOR_CYCLE = [
     get_provider_color("openai"),
     get_provider_color("anthropic"),
     get_provider_color("google"),
     get_provider_color("xai"),
+    get_provider_color("deepseek"),
+    get_provider_color("moonshotai"),
+    get_provider_color("minimax"),
+    get_provider_color("openai"),
+    get_provider_color("meta"),
 ]
 FIGURE_TOP_MARGIN = 0.90
 FIGURE_BOTTOM_MARGIN = 0.20
 FIGURE_LEFT_MARGIN = 0.18
 FIGURE_RIGHT_MARGIN = 0.98
 X_LIMIT_PADDING = 0.11
-MODEL_Y_OFFSETS = [-0.24, -0.08, 0.08, 0.24]
-MARKER_SIZE = 5.2
+MODEL_Y_OFFSETS = [-0.36, -0.27, -0.18, -0.09, 0.0, 0.09, 0.18, 0.27, 0.36]
+MARKER_SIZE = 4.2
 MARKER_EDGE_COLOR = "white"
 MARKER_EDGE_WIDTH = 0.45
 ERROR_LINE_WIDTH = 1.0
@@ -104,8 +125,8 @@ AXIS_LABEL_SIZE = 9
 GROUP_LABEL_SIZE = 8
 LEGEND_FONT_SIZE = 7.5
 LEGEND_MARKER_SIZE = 5.4
-LEGEND_ANCHOR = (0.56, 0.935)
-LEGEND_NCOL = 4
+LEGEND_ANCHOR = (0.56, 0.945)
+LEGEND_NCOL = 3
 SAVE_PAD_INCHES = 0.08
 X_LABEL = r"Target-identity DRF $\beta_{jm}$ (logits)"
 GROUP_LABEL_X_POSITION = -0.165
@@ -158,6 +179,10 @@ def load_target_drf_terms(data_paths: dict[str, Path], model_order: list[str]) -
         if not data_path.exists():
             raise FileNotFoundError(f"Missing target-DRF terms file: {data_path}")
         frame = pd.read_csv(data_path)
+        if "judge_label" in frame.columns:
+            frame = frame.loc[frame["judge_label"].eq(model_id)].copy()
+            if frame.empty:
+                raise ValueError(f"Missing pooled target-DRF rows for model: {model_id}")
         frame["model_id"] = model_id
         frame["provider"] = infer_provider(model_id)
         frames.append(frame)
