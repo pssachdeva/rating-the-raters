@@ -1,0 +1,99 @@
+items:
+  - name: sentiment
+    number: 2
+    question: How would you describe the sentiment of this comment?
+    options:
+      A: Strongly negative
+      B: Somewhat negative
+      C: Neutral
+      D: Somewhat positive
+      E: Strongly positive
+
+  - name: respect
+    number: 3
+    question: Is this comment respectful towards the group(s) you previously identified?
+    options:
+      A: Strongly disrespectful
+      B: Disrespectful
+      C: Neutral
+      D: Respectful
+      E: Strongly respectful
+
+  - name: insult
+    number: 4
+    question: "Do you agree or disagree with the following statement: This comment is insulting towards the group(s) you previously identified."
+    options:
+      A: Strongly disagree
+      B: Disagree
+      C: Neither disagree nor agree
+      D: Agree
+      E: Strongly agree
+
+  - name: humiliate
+    number: 5
+    question: "Do you agree or disagree with the following statement: This comment is humiliating towards the group(s) you previously identified."
+    options:
+      A: Strongly disagree
+      B: Disagree
+      C: Neither disagree nor agree
+      D: Agree
+      E: Strongly agree
+
+  - name: status
+    number: 6
+    question: "This comment states that the group(s) you previously identified is:"
+    options:
+      A: Strongly inferior
+      B: Inferior
+      C: Neither superior nor inferior
+      D: Superior
+      E: Strongly superior
+
+  - name: dehumanize
+    number: 7
+    question: "Do you agree or disagree with the following statement: This comment dehumanizes the group(s) you previously identified (e.g., by comparing them to an animal)."
+    options:
+      A: Strongly disagree
+      B: Disagree
+      C: Neither disagree nor agree
+      D: Agree
+      E: Strongly agree
+
+  - name: violence
+    number: 8
+    question: "Do you agree or disagree with the following statement: This comment calls for using violence against the group(s) you previously identified."
+    options:
+      A: Strongly disagree
+      B: Disagree
+      C: Neither disagree nor agree
+      D: Agree
+      E: Strongly agree
+
+  - name: genocide
+    number: 9
+    question: "Do you agree or disagree with the following statement: This comment calls for the deliberate killing of a large group of people from the group(s) you previously identified."
+    options:
+      A: Strongly disagree
+      B: Disagree
+      C: Neither disagree nor agree
+      D: Agree
+      E: Strongly agree
+
+  - name: attack_defend
+    number: 10
+    question: Is the comment attacking or defending the group(s) you previously identified?
+    options:
+      A: Strongly defending
+      B: Defending
+      C: Neither defending nor attacking
+      D: Attacking
+      E: Strongly attacking
+
+  - name: hate_speech
+    number: 11
+    question: >-
+      Does this comment contain hate speech, defined as "bias-motivated, hostile and malicious language targeted at a person/group because of their actual or perceived innate characteristics, especially when the group is unnecessarily labeled?"
+    options:
+      A: "Yes"
+      B: "No"
+      C: Unclear
