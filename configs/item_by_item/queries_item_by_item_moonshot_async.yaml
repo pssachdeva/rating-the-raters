@@ -1,0 +1,29 @@
+name: item_by_item_moonshot_async
+description: |
+  Independent item-by-item MHS ratings on the reference set using the direct
+  Moonshot streaming API.
+
+subset: reference_set
+
+prompt:
+  mode: item_by_item
+  system_prompt_path: prompts/mhs_survey_itemwise_v1.txt
+  items_path: prompts/mhs_survey_items_v1.yaml
+
+async:
+  max_attempts: 3
+  retry_delay_seconds: 2.0
+  concurrency: 2
+
+model:
+  id: moonshot_kimi-k2.5
+  provider: moonshot
+  name: kimi-k2.5
+  max_tokens: 8192
+  params:
+    thinking:
+      type: enabled
+
+batches:
+  run_dir: batches/item_by_item/moonshot_kimi_k2.5_async
+  combined_output_path: data/item_by_item/moonshot_kimi_k2.5_async_processed.csv

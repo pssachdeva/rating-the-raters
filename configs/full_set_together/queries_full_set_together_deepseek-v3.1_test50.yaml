@@ -1,0 +1,24 @@
+name: full_set_together_deepseek-v3.1_test50
+description: |
+  Together Batch API smoke test for DeepSeek V3.1 on 50 MHS comments with
+  4+ human annotators.
+
+subset:
+  type: annotator_count_threshold
+  min: 4
+
+limit: 50
+
+prompt:
+  system_prompt_path: prompts/mhs_survey_v1.txt
+
+model:
+  id: together_deepseek-ai_deepseek-v3.1
+  provider: together
+  name: deepseek-ai/DeepSeek-V3.1
+  max_tokens: 4096
+  params: {}
+
+batches:
+  run_dir: batches/full_set_together_deepseek-v3.1_test50
+  combined_output_path: data/full_set_together_deepseek-v3.1_test50_processed.csv

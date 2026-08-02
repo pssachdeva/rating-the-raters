@@ -1,0 +1,63 @@
+name: item_by_item_openrouter_async
+description: |
+  Independent item-by-item MHS ratings on the reference set for models accessed
+  through OpenRouter. Each model issues ten individual requests per comment.
+
+subset: reference_set
+
+prompt:
+  mode: item_by_item
+  system_prompt_path: prompts/mhs_survey_itemwise_v1.txt
+  items_path: prompts/mhs_survey_items_v1.yaml
+
+async:
+  max_attempts: 5
+  retry_delay_seconds: 2.0
+  concurrency: 1
+
+models:
+  - id: openrouter_deepseek_deepseek-v3.2
+    provider: openrouter
+    name: deepseek/deepseek-v3.2
+    max_tokens: 512
+    params:
+      temperature: 0.5
+
+  - id: openrouter_qwen_qwen3.5-122b-a10b
+    provider: openrouter
+    name: qwen/qwen3.5-122b-a10b
+    max_tokens: 512
+    params:
+      temperature: 0.5
+
+  - id: openrouter_xiaomi_mimo-v2-pro
+    provider: openrouter
+    name: xiaomi/mimo-v2-pro
+    max_tokens: 4096
+    params:
+      temperature: 0.5
+
+  - id: openrouter_minimax_minimax-m2.5
+    provider: openrouter
+    name: minimax/minimax-m2.5
+    max_tokens: 4096
+    params:
+      temperature: 0.5
+
+  - id: openrouter_z-ai_glm-5-turbo
+    provider: openrouter
+    name: z-ai/glm-5-turbo
+    max_tokens: 4096
+    params:
+      temperature: 0.5
+
+  - id: openrouter_moonshotai_kimi-k2.5
+    provider: openrouter
+    name: moonshotai/kimi-k2.5
+    max_tokens: 4096
+    params:
+      temperature: 0.5
+
+batches:
+  run_dir: batches/item_by_item/openrouter_async
+  combined_output_path: data/item_by_item/openrouter_async_processed.csv

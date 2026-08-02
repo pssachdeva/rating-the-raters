@@ -1,0 +1,55 @@
+name: item_by_item_openai
+description: |
+  Independent item-by-item MHS ratings on the 70-comment reference set for the
+  six OpenAI model identities included in Figure 1b. Each provider batch
+  contains ten requests per comment.
+
+subset: reference_set
+
+prompt:
+  mode: item_by_item
+  system_prompt_path: prompts/mhs_survey_itemwise_v1.txt
+  items_path: prompts/mhs_survey_items_v1.yaml
+
+models:
+  - id: openai_gpt-4.1
+    provider: openai
+    name: gpt-4.1
+    max_tokens: 2000
+
+  - id: openai_gpt-4o
+    provider: openai
+    name: gpt-4o
+    max_tokens: 2000
+
+  - id: openai_gpt-5.2_medium
+    provider: openai
+    name: gpt-5.2
+    max_tokens: 2000
+    reasoning:
+      effort: medium
+
+  - id: openai_gpt-5.4_medium
+    provider: openai
+    name: gpt-5.4
+    max_tokens: 2000
+    reasoning:
+      effort: medium
+
+  - id: openai_gpt-5.4-mini_medium
+    provider: openai
+    name: gpt-5.4-mini
+    max_tokens: 2000
+    reasoning:
+      effort: medium
+
+  - id: openai_gpt-5.4-nano_medium
+    provider: openai
+    name: gpt-5.4-nano
+    max_tokens: 2000
+    reasoning:
+      effort: medium
+
+batches:
+  run_dir: batches/item_by_item/openai
+  combined_output_path: data/item_by_item/openai_processed.csv

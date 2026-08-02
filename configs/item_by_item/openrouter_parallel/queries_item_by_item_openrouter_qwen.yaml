@@ -1,0 +1,26 @@
+name: item_by_item_openrouter_qwen_async
+description: Independent item-by-item MHS ratings using Qwen through OpenRouter.
+
+subset: reference_set
+
+prompt:
+  mode: item_by_item
+  system_prompt_path: prompts/mhs_survey_itemwise_v1.txt
+  items_path: prompts/mhs_survey_items_v1.yaml
+
+async:
+  max_attempts: 5
+  retry_delay_seconds: 2.0
+  concurrency: 1
+
+model:
+  id: openrouter_qwen_qwen3.5-122b-a10b
+  provider: openrouter
+  name: qwen/qwen3.5-122b-a10b
+  max_tokens: 512
+  params:
+    temperature: 0.5
+
+batches:
+  run_dir: batches/item_by_item/openrouter_async/openrouter_qwen_qwen3.5-122b-a10b
+

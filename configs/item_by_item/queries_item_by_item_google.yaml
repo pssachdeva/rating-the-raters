@@ -1,0 +1,48 @@
+name: item_by_item_google
+description: |
+  Independent item-by-item MHS ratings on the 70-comment reference set for the
+  five Google model identities included in Figure 1b. Each provider batch
+  contains ten inline requests per comment.
+
+subset: reference_set
+
+prompt:
+  mode: item_by_item
+  system_prompt_path: prompts/mhs_survey_itemwise_v1.txt
+  items_path: prompts/mhs_survey_items_v1.yaml
+
+models:
+  - id: google_gemini-2.5-flash
+    provider: google
+    name: gemini-2.5-flash
+    max_tokens: 2048
+
+  - id: google_gemini-2.5-pro
+    provider: google
+    name: gemini-2.5-pro
+    max_tokens: 2048
+
+  - id: google_gemini-3-flash-preview_medium
+    provider: google
+    name: gemini-3-flash-preview
+    max_tokens: 2048
+    reasoning:
+      effort: medium
+
+  - id: google_gemini-3.1-flash-lite-preview_medium
+    provider: google
+    name: gemini-3.1-flash-lite-preview
+    max_tokens: 2048
+    reasoning:
+      effort: medium
+
+  - id: google_gemini-3.1-pro-preview_medium
+    provider: google
+    name: gemini-3.1-pro-preview
+    max_tokens: 2048
+    reasoning:
+      effort: medium
+
+batches:
+  run_dir: batches/item_by_item/google
+  combined_output_path: data/item_by_item/google_processed.csv

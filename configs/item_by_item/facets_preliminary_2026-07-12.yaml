@@ -1,0 +1,27 @@
+annotations:
+  paths:
+    - data/item_by_item/preliminary_snapshot_2026-07-12_processed.csv
+
+anchors:
+  comment_scores_path: facets/human_baseline/human_facets_scores.1.txt
+  item_scores_path: facets/human_baseline/human_facets_scores.3.txt
+
+output:
+  facets_run_dir: facets/item_by_item_preliminary_2026_07_12
+  facets_data_filename: item_by_item_preliminary_2026_07_12_data.tsv
+  facets_spec_filename: item_by_item_preliminary_2026_07_12_spec.txt
+  facets_score_filename: item_by_item_preliminary_2026_07_12_scores.txt
+  facets_output_filename: item_by_item_preliminary_2026_07_12_output.txt
+
+facets:
+  title: MHS Item-by-Item Preliminary Models Anchored To Human Baseline
+  model: "?, ?, #, R"
+  noncenter: 2
+  positive: 1
+  arrange: N
+  subset_detection: No
+  delements:
+    - 1N
+    - 2N
+    - 3N
+  csv: Tab

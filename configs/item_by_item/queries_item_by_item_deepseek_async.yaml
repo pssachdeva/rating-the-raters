@@ -1,0 +1,35 @@
+name: item_by_item_deepseek_async
+description: |
+  Independent item-by-item MHS ratings on the reference set using the direct
+  DeepSeek streaming API.
+
+subset: reference_set
+
+prompt:
+  mode: item_by_item
+  system_prompt_path: prompts/mhs_survey_itemwise_v1.txt
+  items_path: prompts/mhs_survey_items_v1.yaml
+
+async:
+  max_attempts: 2
+  retry_delay_seconds: 2.0
+  concurrency: 6
+
+model:
+  id: deepseek_deepseek-v4-pro
+  provider: deepseek
+  name: deepseek-v4-pro
+  max_tokens: 4096
+  reasoning:
+    effort: high
+  params:
+    thinking:
+      type: enabled
+    response_format:
+      type: json_object
+    stream_options:
+      include_usage: true
+
+batches:
+  run_dir: batches/item_by_item/deepseek_v4_pro_async
+  combined_output_path: data/item_by_item/deepseek_v4_pro_async_processed.csv
