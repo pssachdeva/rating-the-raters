@@ -1,7 +1,7 @@
 import pandas as pd
 
-from mhs_llms.dataset import build_comment_frame, normalize_mhs_dataframe
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.dataset import build_comment_frame, normalize_mhs_dataframe
+from rating_raters.schema import ITEM_NAMES
 
 
 def test_normalize_mhs_dataframe_renames_violence_phys_and_preserves_required_columns() -> None:

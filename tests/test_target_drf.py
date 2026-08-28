@@ -1,7 +1,7 @@
 import pandas as pd
 
-from mhs_llms.config import FacetsConfig, TargetDRFConfig
-from mhs_llms.facets.target_drf import (
+from rating_raters.config import FacetsConfig, TargetDRFConfig
+from rating_raters.facets.target_drf import (
     build_target_drf_facets_spec,
     filter_target_labels_to_annotations,
     parse_target_bias_terms,

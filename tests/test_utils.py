@@ -1,6 +1,6 @@
 import pandas as pd
 
-from mhs_llms.utils import recode_responses
+from rating_raters.utils import recode_responses
 
 
 def test_recode_responses_applies_sparse_integer_mappings() -> None:

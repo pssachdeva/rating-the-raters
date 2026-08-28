@@ -1,6 +1,6 @@
 import json
 
-from mhs_llms.facets import extract_facets_run_summary, parse_facets_score_file, process_facets_run
+from rating_raters.facets import extract_facets_run_summary, parse_facets_score_file, process_facets_run
 
 
 def test_parse_facets_score_file_reads_header_and_rows(tmp_path) -> None:

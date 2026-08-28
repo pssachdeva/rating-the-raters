@@ -1,4 +1,4 @@
-from mhs_llms.labels import (
+from rating_raters.labels import (
     infer_provider,
     model_id_to_label,
     model_id_to_plot_label,

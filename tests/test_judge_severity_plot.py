@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from mhs_llms.facets.judge_severity_plot import (
+from rating_raters.facets.judge_severity_plot import (
     load_reference_anthropic_judge_severities,
     load_reference_anthropic_opus_judge_severities,
     load_reference_reasoning_severities,

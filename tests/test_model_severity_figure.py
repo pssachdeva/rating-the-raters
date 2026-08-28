@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mhs_llms.facets.model_severity_figure import (
+from rating_raters.facets.model_severity_figure import (
     load_human_judge_severities,
     load_model_judge_severities,
 )

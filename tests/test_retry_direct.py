@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
 
-from mhs_llms.config import (
+from rating_raters.config import (
     BatchModelConfig,
     BatchPromptConfig,
     BatchStorageConfig,
     ModelBatchConfig,
 )
-from mhs_llms.retry_direct import (
+from rating_raters.retry_direct import (
     _parse_openai_compatible_streaming_lines,
     _parse_together_streaming_lines,
     _merge_processed_rows,

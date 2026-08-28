@@ -3,8 +3,8 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from mhs_llms.facets import parse_bias_interaction_report, run_severity_decomposition_facets
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.facets import parse_bias_interaction_report, run_severity_decomposition_facets
+from rating_raters.schema import ITEM_NAMES
 
 
 def test_run_severity_decomposition_facets_writes_combined_outputs(tmp_path: Path) -> None:

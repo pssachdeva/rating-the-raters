@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mhs_llms.score_distribution import (
+from rating_raters.score_distribution import (
     align_item_responses,
     build_comment_score_frame,
     plot_score_distributions,

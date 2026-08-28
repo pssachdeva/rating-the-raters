@@ -1,11 +1,11 @@
 import pandas as pd
 
-from mhs_llms.qualitative_examples import (
+from rating_raters.qualitative_examples import (
     build_comment_response_profile,
     build_comment_summary,
     select_black_woman_reference_comment,
 )
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.schema import ITEM_NAMES
 
 
 def test_select_black_woman_reference_comment_prefers_highest_aligned_score() -> None:

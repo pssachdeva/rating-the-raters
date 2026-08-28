@@ -3,16 +3,16 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from mhs_llms.config import FacetsConfig, OrderEffectConfig, load_order_effect_config
-from mhs_llms.facets.order_effect import (
+from rating_raters.config import FacetsConfig, OrderEffectConfig, load_order_effect_config
+from rating_raters.facets.order_effect import (
     build_order_condition_contrast,
     build_order_effect_facets_frame,
     build_order_effect_facets_spec,
     parse_order_condition_scores,
     run_order_effect_facets,
 )
-from mhs_llms.facets.order_effect_plot import load_order_shift_comparison
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.facets.order_effect_plot import load_order_shift_comparison
+from rating_raters.schema import ITEM_NAMES
 
 
 def test_load_order_effect_config_resolves_paths(tmp_path: Path) -> None:

@@ -4,7 +4,7 @@ import json
 import pandas as pd
 import pytest
 
-from mhs_llms.batch import (
+from rating_raters.batch import (
     _build_requests,
     _create_provider_batch,
     _download_provider_results,
@@ -14,7 +14,7 @@ from mhs_llms.batch import (
     write_combined_processed_annotations,
     write_processed_annotations,
 )
-from mhs_llms.batch import (
+from rating_raters.batch import (
     _extract_anthropic_result,
     _extract_google_result,
     _extract_moonshot_result,
@@ -26,14 +26,14 @@ from mhs_llms.batch import (
     _parse_response_json,
     _provider_api_key,
 )
-from mhs_llms.config import (
+from rating_raters.config import (
     BatchModelConfig,
     BatchPromptConfig,
     BatchReasoningConfig,
     BatchStorageConfig,
     ModelBatchConfig,
 )
-from mhs_llms.schema import MHSAnnotationRecord, annotation_record_to_row
+from rating_raters.schema import MHSAnnotationRecord, annotation_record_to_row
 
 
 def test_parse_response_json_handles_markdown_code_fences() -> None:
@@ -909,7 +909,7 @@ def test_create_google_batch_uploads_jsonl_and_uses_uploaded_file_name(
             self.batches = DummyBatches()
 
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
-    monkeypatch.setattr("mhs_llms.batch.genai.Client", DummyClient)
+    monkeypatch.setattr("rating_raters.batch.genai.Client", DummyClient)
 
     batch = _create_provider_batch(
         config=config,
@@ -995,7 +995,7 @@ def test_create_xai_batch_creates_batch_and_adds_requests(tmp_path: Path, monkey
             return {"batch_id": "batch-xai-123", "state": {"num_pending": 1, "num_error": 0, "num_cancelled": 0}}
         raise AssertionError(f"Unexpected xAI call: {(method, path)}")
 
-    monkeypatch.setattr("mhs_llms.batch._xai_api_request", fake_xai_api_request)
+    monkeypatch.setattr("rating_raters.batch._xai_api_request", fake_xai_api_request)
 
     batch = _create_provider_batch(
         config=config,
@@ -1063,8 +1063,8 @@ def test_create_together_batch_uploads_file_and_creates_job(tmp_path: Path, monk
             }
         }
 
-    monkeypatch.setattr("mhs_llms.batch._together_upload_file", fake_together_upload_file)
-    monkeypatch.setattr("mhs_llms.batch._together_api_request", fake_together_api_request)
+    monkeypatch.setattr("rating_raters.batch._together_upload_file", fake_together_upload_file)
+    monkeypatch.setattr("rating_raters.batch._together_api_request", fake_together_api_request)
 
     batch = _create_provider_batch(
         config=config,
@@ -1123,7 +1123,7 @@ def test_download_provider_results_reads_google_output_file(monkeypatch, tmp_pat
 
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
     monkeypatch.setattr(
-        "mhs_llms.batch._download_google_batch_output",
+        "rating_raters.batch._download_google_batch_output",
         lambda file_name, api_key: (
             json.dumps(
                 {
@@ -1301,7 +1301,7 @@ def test_download_provider_results_reads_paginated_xai_results(monkeypatch, tmp_
             "pagination_token": None,
         }
 
-    monkeypatch.setattr("mhs_llms.batch._xai_api_request", fake_xai_api_request)
+    monkeypatch.setattr("rating_raters.batch._xai_api_request", fake_xai_api_request)
 
     rows = _download_provider_results(
         config=config,
@@ -1369,7 +1369,7 @@ def test_download_provider_results_reads_together_output_and_error_files(
             ).encode("utf-8")
         raise AssertionError(f"Unexpected file_id: {file_id}")
 
-    monkeypatch.setattr("mhs_llms.batch._together_download_file", fake_together_download_file)
+    monkeypatch.setattr("rating_raters.batch._together_download_file", fake_together_download_file)
 
     rows = _download_provider_results(
         config=config,

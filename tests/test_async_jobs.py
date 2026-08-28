@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mhs_llms import async_jobs
-from mhs_llms.async_jobs import (
+from rating_raters import async_jobs
+from rating_raters.async_jobs import (
     _build_async_request_rows,
     _build_async_provider_request,
     _execute_async_request,
@@ -12,8 +12,8 @@ from mhs_llms.async_jobs import (
     process_async,
     process_async_for_config,
 )
-from mhs_llms.schema import ITEM_NAMES
-from mhs_llms.config import (
+from rating_raters.schema import ITEM_NAMES
+from rating_raters.config import (
     AsyncRetryConfig,
     BatchModelConfig,
     BatchPromptConfig,

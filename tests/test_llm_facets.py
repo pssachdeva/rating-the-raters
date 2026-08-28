@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from mhs_llms.config import load_llm_facets_config, load_llm_only_facets_config
-from mhs_llms.facets.llm_only import run_llm_only_facets
-from mhs_llms.llm_facets import run_anchored_llm_facets
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.config import load_llm_facets_config, load_llm_only_facets_config
+from rating_raters.facets.llm_only import run_llm_only_facets
+from rating_raters.llm_facets import run_anchored_llm_facets
+from rating_raters.schema import ITEM_NAMES
 
 
 def test_load_llm_facets_config_resolves_paths(tmp_path: Path) -> None:

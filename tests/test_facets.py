@@ -1,8 +1,8 @@
 import pandas as pd
 
-from mhs_llms.config import FacetsConfig
-from mhs_llms.schema import ITEM_NAMES
-from mhs_llms.facets import build_facets_frame, build_facets_spec, load_measure_anchors
+from rating_raters.config import FacetsConfig
+from rating_raters.schema import ITEM_NAMES
+from rating_raters.facets import build_facets_frame, build_facets_spec, load_measure_anchors
 
 
 def test_build_facets_frame_uses_expected_columns_and_item_order() -> None:

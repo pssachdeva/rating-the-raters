@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from mhs_llms.config import (
+from rating_raters.config import (
     load_model_batch_config,
     load_model_batch_configs,
     load_severity_decomposition_config,

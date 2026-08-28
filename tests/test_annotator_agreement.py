@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mhs_llms.annotator_agreement import (
+from rating_raters.annotator_agreement import (
     build_llm_human_consensus_agreement,
     build_item_agreement_summary,
     krippendorff_alpha,
@@ -10,7 +10,7 @@ from mhs_llms.annotator_agreement import (
     prepare_agreement_annotations,
     quadratic_weighted_kappa,
 )
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.schema import ITEM_NAMES
 
 
 def test_krippendorff_alpha_returns_one_for_perfect_agreement_with_missing_cells() -> None:

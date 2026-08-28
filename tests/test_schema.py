@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 
-from mhs_llms.schema import (
+from rating_raters.schema import (
     normalize_human_annotation,
     normalize_human_annotations,
     normalize_model_annotation,
