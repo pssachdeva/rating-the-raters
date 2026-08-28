@@ -1,12 +1,12 @@
 """Plot original versus reverse question-order severity shifts."""
 
-from mhs_llms.facets.order_effect_plot import (
+from rating_raters.facets.order_effect_plot import (
     OrderShiftPlotStyle,
     load_order_shift_comparison,
     load_pooled_order_delta,
     plot_order_shift_comparison,
 )
-from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
+from rating_raters.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
 
 
 ORIGINAL_JUDGES_PATH = FACETS_DIR / "full_run_models_reference_set" / "judges_scores.csv"

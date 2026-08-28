@@ -1,5 +1,5 @@
-from mhs_llms.paths import REPO_ROOT
-from mhs_llms.human_baseline import run_human_baseline
+from rating_raters.paths import REPO_ROOT
+from rating_raters.human_baseline import run_human_baseline
 
 
 if __name__ == "__main__":

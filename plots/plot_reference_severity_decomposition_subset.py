@@ -11,8 +11,8 @@ import pandas as pd
 from pathlib import Path
 from PIL import Image, ImageChops
 
-from mhs_llms.labels import model_id_to_plot_label
-from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR
+from rating_raters.labels import model_id_to_plot_label
+from rating_raters.paths import ARTIFACTS_DIR, DATA_DIR
 
 
 SUBSET_MODEL_IDS = [

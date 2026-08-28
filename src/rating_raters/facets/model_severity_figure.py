@@ -5,9 +5,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from mhs_llms.facets.postprocess import parse_facets_score_file
-from mhs_llms.labels import infer_provider, model_id_to_plot_label, provider_display_name
-from mhs_llms.plotting import (
+from rating_raters.facets.postprocess import parse_facets_score_file
+from rating_raters.labels import infer_provider, model_id_to_plot_label, provider_display_name
+from rating_raters.plotting import (
     apply_plot_style,
     build_gaussian_kde_curve,
     format_plot_text,

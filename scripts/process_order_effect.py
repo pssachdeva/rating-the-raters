@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from mhs_llms.facets import process_order_effect_run
+from rating_raters.facets import process_order_effect_run
 
 
 def main() -> None:

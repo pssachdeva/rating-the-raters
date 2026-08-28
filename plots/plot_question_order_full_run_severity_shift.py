@@ -1,11 +1,11 @@
 """Plot original versus reverse question-order severity shifts for full-run models."""
 
-from mhs_llms.facets.order_effect_plot import (
+from rating_raters.facets.order_effect_plot import (
     load_order_shift_comparison,
     load_pooled_order_delta,
     plot_order_shift_comparison,
 )
-from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
+from rating_raters.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
 from plot_question_order_severity_shift import ORDER_SHIFT_STYLE
 
 

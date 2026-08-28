@@ -2,8 +2,8 @@ import argparse
 from pathlib import Path
 import subprocess
 
-from mhs_llms.config import load_severity_decomposition_config
-from mhs_llms.facets import process_severity_decomposition_run, run_severity_decomposition_facets
+from rating_raters.config import load_severity_decomposition_config
+from rating_raters.facets import process_severity_decomposition_run, run_severity_decomposition_facets
 
 
 DEFAULT_CONFIG_PATH = Path("configs/full_set_all_models/facets_severity_decomposition.yaml")

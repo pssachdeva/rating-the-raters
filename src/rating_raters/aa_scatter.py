@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from mhs_llms.labels import provider_display_name
-from mhs_llms.plotting import PROVIDER_COLORS, format_plot_text
+from rating_raters.labels import provider_display_name
+from rating_raters.plotting import PROVIDER_COLORS, format_plot_text
 
 
 VARIANT_SUFFIXES = ("_minimal", "_low", "_medium", "_high", "_xhigh", "_none")

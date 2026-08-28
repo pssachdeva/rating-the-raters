@@ -15,7 +15,7 @@ from openai import OpenAI
 import pandas as pd
 from tqdm.auto import tqdm
 
-from mhs_llms.batch import (
+from rating_raters.batch import (
     _apply_anthropic_request_reasoning,
     _build_processing_error_record,
     _coerce_anthropic_content_to_text,
@@ -38,8 +38,8 @@ from mhs_llms.batch import (
     _write_jsonl,
     write_combined_processed_annotations,
 )
-from mhs_llms.config import ModelBatchConfig, load_model_batch_configs
-from mhs_llms.schema import annotation_record_to_row, normalize_model_annotation
+from rating_raters.config import ModelBatchConfig, load_model_batch_configs
+from rating_raters.schema import annotation_record_to_row, normalize_model_annotation
 
 
 ASYNC_MANIFEST_FILENAME = "async_request_manifest.jsonl"
@@ -51,7 +51,7 @@ ASYNC_PROCESSED_CSV_FILENAME = "async_processed_records.csv"
 ASYNC_PROCESSING_ERRORS_FILENAME = "async_processing_errors.jsonl"
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-OPENROUTER_TITLE = "measuring-hate-speech-llms"
+OPENROUTER_TITLE = "rating-the-raters"
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 MOONSHOT_API_BASE_URL = "https://api.moonshot.ai/v1"
 TOGETHER_API_BASE_URL = "https://api.together.xyz/v1"

@@ -19,10 +19,10 @@ from openai import OpenAI
 import pandas as pd
 import yaml
 
-from mhs_llms.config import ModelBatchConfig, load_model_batch_config, load_model_batch_configs
-from mhs_llms.constants import REFERENCE_SET_PLATFORM
-from mhs_llms.dataset import build_comment_frame, load_mhs_dataframe
-from mhs_llms.schema import (
+from rating_raters.config import ModelBatchConfig, load_model_batch_config, load_model_batch_configs
+from rating_raters.constants import REFERENCE_SET_PLATFORM
+from rating_raters.dataset import build_comment_frame, load_mhs_dataframe
+from rating_raters.schema import (
     ITEM_NAMES,
     ITEM_RESPONSE_LETTERS,
     TARGET_GROUP_CODES,

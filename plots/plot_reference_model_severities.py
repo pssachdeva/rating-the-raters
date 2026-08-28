@@ -3,12 +3,12 @@
 import argparse
 from pathlib import Path
 
-from mhs_llms.facets.model_severity_figure import (
+from rating_raters.facets.model_severity_figure import (
     load_human_judge_severities,
     load_model_judge_severities,
     plot_model_severity_figure,
 )
-from mhs_llms.paths import ARTIFACTS_DIR, FACETS_DIR
+from rating_raters.paths import ARTIFACTS_DIR, FACETS_DIR
 
 
 DEFAULT_HUMAN_PATH = FACETS_DIR / "human_baseline" / "human_facets_scores.2.txt"

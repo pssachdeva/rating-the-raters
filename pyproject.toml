@@ -1,5 +1,5 @@
 [project]
-name = "measuring-hate-speech-llms"
+name = "rating-the-raters"
 version = "0.1.0"
 description = "Evaluation pipeline for estimating hate-speech severity from LLM responses on the Measuring Hate Speech corpus."
 readme = "README.md"
@@ -35,7 +35,7 @@ target-version = "py311"
 pythonpath = ["src"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/mhs_llms"]
+packages = ["src/rating_raters"]
 
 [tool.uv.sources]
 mpl-lego = { path = "../mpl-lego", editable = true }

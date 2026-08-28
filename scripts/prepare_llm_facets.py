@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from mhs_llms.llm_facets import run_anchored_llm_facets
+from rating_raters.llm_facets import run_anchored_llm_facets
 
 
 def main() -> None:

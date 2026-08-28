@@ -8,8 +8,8 @@ from mpl_lego.style import use_latex_style
 import numpy as np
 import pandas as pd
 
-from mhs_llms.labels import infer_provider, model_id_to_plot_label, provider_display_name
-from mhs_llms.plotting import PROVIDER_COLORS, save_figure
+from rating_raters.labels import infer_provider, model_id_to_plot_label, provider_display_name
+from rating_raters.plotting import PROVIDER_COLORS, save_figure
 
 
 ORIGINAL_SCORES_PATH = Path("facets/reference_set_all/judges_scores.csv")

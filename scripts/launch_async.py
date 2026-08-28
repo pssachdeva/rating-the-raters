@@ -4,8 +4,8 @@ import sys
 
 from loguru import logger
 
-from mhs_llms.async_jobs import launch_async
-from mhs_llms.paths import REPO_ROOT
+from rating_raters.async_jobs import launch_async
+from rating_raters.paths import REPO_ROOT
 
 
 def _print_summary(title: str, rows: list[tuple[str, str]]) -> None:

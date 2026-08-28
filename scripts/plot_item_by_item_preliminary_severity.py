@@ -4,7 +4,7 @@ from pathlib import Path
 
 from mpl_lego.style import use_latex_style
 
-from mhs_llms.facets.model_severity_figure import (
+from rating_raters.facets.model_severity_figure import (
     load_human_judge_severities,
     load_model_judge_severities,
     plot_model_severity_figure,

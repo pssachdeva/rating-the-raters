@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from mhs_llms.paths import REPO_ROOT
-from mhs_llms.score_distribution import (
+from rating_raters.paths import REPO_ROOT
+from rating_raters.score_distribution import (
     build_comment_score_frame,
     build_default_output_path,
     infer_llm_label,

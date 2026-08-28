@@ -9,7 +9,7 @@ from mpl_lego.labels import bold_text, fix_labels_for_tex_style
 from mpl_lego.style import use_latex_style
 import pandas as pd
 
-from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR
+from rating_raters.paths import ARTIFACTS_DIR, DATA_DIR
 
 
 POOLED_TARGET_TERMS_PATH = DATA_DIR / "full_set_all_models_target_drf_free_judges_target_terms.csv"

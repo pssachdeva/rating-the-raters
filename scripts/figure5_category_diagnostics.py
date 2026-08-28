@@ -7,7 +7,7 @@ from mpl_lego.labels import bold_text, fix_labels_for_tex_style
 from mpl_lego.style import use_latex_style
 import pandas as pd
 
-from mhs_llms.plotting import save_figure
+from rating_raters.plotting import save_figure
 
 
 FACETS_OUTPUT_PATH = Path("facets/full_set_all_models_llm_only/full_set_all_models_llm_only_output.txt")

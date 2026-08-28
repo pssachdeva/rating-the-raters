@@ -5,12 +5,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from mhs_llms.config import load_llm_only_facets_config
-from mhs_llms.constants import HUMAN_FACETS_RECODE_MAP
-from mhs_llms.facets.anchored import _build_facets_judge_map
-from mhs_llms.facets.facets import build_facets_frame, build_facets_spec, write_facets_data, write_facets_spec
-from mhs_llms.schema import ITEM_NAMES, prompt_letter_to_hf_value
-from mhs_llms.utils import recode_responses
+from rating_raters.config import load_llm_only_facets_config
+from rating_raters.constants import HUMAN_FACETS_RECODE_MAP
+from rating_raters.facets.anchored import _build_facets_judge_map
+from rating_raters.facets.facets import build_facets_frame, build_facets_spec, write_facets_data, write_facets_spec
+from rating_raters.schema import ITEM_NAMES, prompt_letter_to_hf_value
+from rating_raters.utils import recode_responses
 
 LLM_ONLY_REQUIRED_COLUMNS = (
     "comment_id",

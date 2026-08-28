@@ -13,7 +13,7 @@ from loguru import logger
 from openai import OpenAI
 import pandas as pd
 
-from mhs_llms.batch import (
+from rating_raters.batch import (
     MOONSHOT_API_BASE_URL,
     TOGETHER_API_BASE_URL,
     _apply_anthropic_request_reasoning,
@@ -34,8 +34,8 @@ from mhs_llms.batch import (
     _xai_api_request,
     write_combined_processed_annotations,
 )
-from mhs_llms.config import ModelBatchConfig, load_model_batch_configs
-from mhs_llms.schema import annotation_record_to_row, normalize_model_annotation
+from rating_raters.config import ModelBatchConfig, load_model_batch_configs
+from rating_raters.schema import annotation_record_to_row, normalize_model_annotation
 
 
 @dataclass(frozen=True)

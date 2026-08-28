@@ -7,10 +7,10 @@ from mpl_lego.labels import apply_subplot_labels
 import numpy as np
 import pandas as pd
 
-from mhs_llms.facets.postprocess import parse_facets_score_file
-from mhs_llms.labels import infer_provider, model_id_to_plot_label, provider_display_name
-from mhs_llms.paths import ARTIFACTS_DIR, FACETS_DIR
-from mhs_llms.plotting import (
+from rating_raters.facets.postprocess import parse_facets_score_file
+from rating_raters.labels import infer_provider, model_id_to_plot_label, provider_display_name
+from rating_raters.paths import ARTIFACTS_DIR, FACETS_DIR
+from rating_raters.plotting import (
     PROVIDER_COLORS,
     apply_plot_style,
     build_gaussian_kde_curve,

@@ -3,13 +3,13 @@
 import argparse
 from pathlib import Path
 
-from mhs_llms.facets.judge_severity_plot import (
+from rating_raters.facets.judge_severity_plot import (
     load_reference_reasoning_severities,
     load_reference_openai_judge_severities,
     plot_reference_openai_judge_severities,
     plot_reference_openai_reasoning_severities,
 )
-from mhs_llms.paths import ARTIFACTS_DIR, FACETS_DIR
+from rating_raters.paths import ARTIFACTS_DIR, FACETS_DIR
 
 
 DEFAULT_SCORES_PATH = FACETS_DIR / "reference_set_openai" / "judges_scores.csv"

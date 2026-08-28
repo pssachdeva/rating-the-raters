@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from mhs_llms.dataset import load_mhs_dataframe
-from mhs_llms.constants import HUMAN_FACETS_RECODE_MAP
-from mhs_llms.plotting import format_plot_text, save_figure
-from mhs_llms.schema import ITEM_NAMES
-from mhs_llms.score_distribution import align_item_responses, read_annotation_table
-from mhs_llms.utils import recode_responses
+from rating_raters.dataset import load_mhs_dataframe
+from rating_raters.constants import HUMAN_FACETS_RECODE_MAP
+from rating_raters.plotting import format_plot_text, save_figure
+from rating_raters.schema import ITEM_NAMES
+from rating_raters.score_distribution import align_item_responses, read_annotation_table
+from rating_raters.utils import recode_responses
 
 
 ITEM_DISPLAY_LABELS = {

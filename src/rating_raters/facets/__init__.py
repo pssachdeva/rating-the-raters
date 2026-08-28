@@ -1,22 +1,22 @@
 """FACETS export and post-processing helpers."""
 
-from mhs_llms.facets.anchored import AnchoredLLMFacetsOutputs, run_anchored_llm_facets
-from mhs_llms.facets.llm_only import LLMOnlyFacetsOutputs, run_llm_only_facets
-from mhs_llms.facets.facets import (
+from rating_raters.facets.anchored import AnchoredLLMFacetsOutputs, run_anchored_llm_facets
+from rating_raters.facets.llm_only import LLMOnlyFacetsOutputs, run_llm_only_facets
+from rating_raters.facets.facets import (
     build_facets_frame,
     build_facets_spec,
     build_human_facets_frame,
     write_facets_data,
     write_facets_spec,
 )
-from mhs_llms.facets.postprocess import (
+from rating_raters.facets.postprocess import (
     FacetsPostprocessOutputs,
     extract_facets_run_summary,
     load_measure_anchors,
     parse_facets_score_file,
     process_facets_run,
 )
-from mhs_llms.facets.order_effect import (
+from rating_raters.facets.order_effect import (
     OrderEffectOutputs,
     OrderEffectPostprocessOutputs,
     build_order_condition_contrast,
@@ -26,14 +26,14 @@ from mhs_llms.facets.order_effect import (
     process_order_effect_run,
     run_order_effect_facets,
 )
-from mhs_llms.facets.severity_decomposition import (
+from rating_raters.facets.severity_decomposition import (
     SeverityDecompositionOutputs,
     SeverityDecompositionPostprocessOutputs,
     parse_bias_interaction_report,
     process_severity_decomposition_run,
     run_severity_decomposition_facets,
 )
-from mhs_llms.facets.target_drf import (
+from rating_raters.facets.target_drf import (
     TargetDRFOutputs,
     TargetDRFPostprocessOutputs,
     process_target_drf_run,

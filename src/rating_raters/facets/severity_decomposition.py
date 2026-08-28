@@ -7,12 +7,12 @@ from typing import Mapping
 
 import pandas as pd
 
-from mhs_llms.config import load_severity_decomposition_config
-from mhs_llms.facets.anchored import _prepare_llm_annotations
-from mhs_llms.facets.facets import build_facets_frame, build_facets_spec
-from mhs_llms.facets.facets import write_facets_data, write_facets_spec
-from mhs_llms.facets.postprocess import load_measure_anchors
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.config import load_severity_decomposition_config
+from rating_raters.facets.anchored import _prepare_llm_annotations
+from rating_raters.facets.facets import build_facets_frame, build_facets_spec
+from rating_raters.facets.facets import write_facets_data, write_facets_spec
+from rating_raters.facets.postprocess import load_measure_anchors
+from rating_raters.schema import ITEM_NAMES
 
 
 @dataclass(frozen=True)

@@ -4,15 +4,15 @@ from cycler import cycler
 import matplotlib.pyplot as plt
 from mpl_lego.style import use_latex_style
 
-from mhs_llms.annotator_agreement import (
+from rating_raters.annotator_agreement import (
     build_item_agreement_summary,
     load_annotation_files,
     load_human_annotations,
     plot_item_agreement_summary,
     reference_comment_ids_from_annotations,
 )
-from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR, REPO_ROOT
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.paths import ARTIFACTS_DIR, DATA_DIR, REPO_ROOT
+from rating_raters.schema import ITEM_NAMES
 
 
 MODEL_ANNOTATION_PATHS = [

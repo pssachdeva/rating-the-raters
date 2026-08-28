@@ -7,16 +7,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from mhs_llms.dataset import load_mhs_dataframe
-from mhs_llms.labels import infer_provider, model_id_to_label, provider_display_name
-from mhs_llms.plotting import (
+from rating_raters.dataset import load_mhs_dataframe
+from rating_raters.labels import infer_provider, model_id_to_label, provider_display_name
+from rating_raters.plotting import (
     build_gaussian_kde_curve,
     format_plot_text,
     get_provider_color,
     save_figure,
 )
-from mhs_llms.schema import ITEM_NAMES
-from mhs_llms.score_distribution import align_item_responses, read_annotation_table
+from rating_raters.schema import ITEM_NAMES
+from rating_raters.score_distribution import align_item_responses, read_annotation_table
 
 
 SCORE_COLUMN = "hate_speech_score"

@@ -3,17 +3,17 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from mhs_llms.config import load_human_baseline_config
-from mhs_llms.constants import HUMAN_FACETS_RECODE_MAP
-from mhs_llms.dataset import load_mhs_dataframe
-from mhs_llms.facets import (
+from rating_raters.config import load_human_baseline_config
+from rating_raters.constants import HUMAN_FACETS_RECODE_MAP
+from rating_raters.dataset import load_mhs_dataframe
+from rating_raters.facets import (
     build_facets_spec,
     build_facets_frame,
     write_facets_data,
     write_facets_spec,
 )
-from mhs_llms.schema import normalize_human_annotations
-from mhs_llms.utils import recode_responses
+from rating_raters.schema import normalize_human_annotations
+from rating_raters.utils import recode_responses
 
 
 @dataclass(frozen=True)

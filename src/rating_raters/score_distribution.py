@@ -5,9 +5,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from mhs_llms.paths import ARTIFACTS_DIR
-from mhs_llms.plotting import build_gaussian_kde_curve
-from mhs_llms.schema import ITEM_NAMES, prompt_letter_to_hf_value
+from rating_raters.paths import ARTIFACTS_DIR
+from rating_raters.plotting import build_gaussian_kde_curve
+from rating_raters.schema import ITEM_NAMES, prompt_letter_to_hf_value
 
 RAW_ITEM_COLUMN_ALIASES = {
     "hate_speech": ("hatespeech",),

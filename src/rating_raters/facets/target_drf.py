@@ -7,12 +7,12 @@ import re
 
 import pandas as pd
 
-from mhs_llms.config import TargetDRFConfig, load_target_drf_config
-from mhs_llms.dataset import load_mhs_dataframe
-from mhs_llms.facets.anchored import _prepare_llm_annotations
-from mhs_llms.facets.facets import _format_measure, write_facets_data, write_facets_spec
-from mhs_llms.facets.postprocess import load_measure_anchors, parse_facets_score_file
-from mhs_llms.schema import ITEM_NAMES, TARGET_GROUP_COLUMNS
+from rating_raters.config import TargetDRFConfig, load_target_drf_config
+from rating_raters.dataset import load_mhs_dataframe
+from rating_raters.facets.anchored import _prepare_llm_annotations
+from rating_raters.facets.facets import _format_measure, write_facets_data, write_facets_spec
+from rating_raters.facets.postprocess import load_measure_anchors, parse_facets_score_file
+from rating_raters.schema import ITEM_NAMES, TARGET_GROUP_COLUMNS
 
 
 @dataclass(frozen=True)

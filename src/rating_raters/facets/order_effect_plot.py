@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import pandas as pd
 
-from mhs_llms.facets.model_severity_figure import _read_facets_score_table
-from mhs_llms.labels import infer_provider, model_id_to_plot_label
-from mhs_llms.plotting import apply_plot_style, format_plot_text, get_provider_color, save_figure
+from rating_raters.facets.model_severity_figure import _read_facets_score_table
+from rating_raters.labels import infer_provider, model_id_to_plot_label
+from rating_raters.plotting import apply_plot_style, format_plot_text, get_provider_color, save_figure
 
 
 OPEN_MODEL_PROVIDERS = {"deepseek", "meta", "minimax", "moonshotai", "qwen", "xiaomi", "zai"}

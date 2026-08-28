@@ -5,8 +5,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from mhs_llms.labels import model_id_to_label
-from mhs_llms.plotting import apply_plot_style, format_plot_text
+from rating_raters.labels import model_id_to_label
+from rating_raters.plotting import apply_plot_style, format_plot_text
 
 
 REFERENCE_OPENAI_MODEL_ORDER = [

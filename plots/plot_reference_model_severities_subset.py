@@ -7,12 +7,12 @@ from mpl_lego.labels import bold_text
 from mpl_lego.style import use_latex_style
 import pandas as pd
 
-from mhs_llms.facets.model_severity_figure import (
+from rating_raters.facets.model_severity_figure import (
     load_human_judge_severities,
     load_model_judge_severities,
 )
-from mhs_llms.paths import ARTIFACTS_DIR, FACETS_DIR
-from mhs_llms.plotting import build_gaussian_kde_curve, get_provider_color
+from rating_raters.paths import ARTIFACTS_DIR, FACETS_DIR
+from rating_raters.plotting import build_gaussian_kde_curve, get_provider_color
 
 
 SUBSET_MODEL_IDS = [

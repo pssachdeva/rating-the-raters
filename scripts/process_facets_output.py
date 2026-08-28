@@ -4,8 +4,8 @@ import sys
 
 from loguru import logger
 
-from mhs_llms.config import load_llm_facets_config, load_llm_only_facets_config
-from mhs_llms.facets import process_facets_run
+from rating_raters.config import load_llm_facets_config, load_llm_only_facets_config
+from rating_raters.facets import process_facets_run
 
 
 def main() -> None:

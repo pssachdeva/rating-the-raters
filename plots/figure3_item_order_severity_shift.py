@@ -10,9 +10,9 @@ from mpl_lego.labels import bold_text
 from mpl_lego.style import use_latex_style
 import pandas as pd
 
-from mhs_llms.facets.order_effect_plot import load_order_shift_comparison, load_pooled_order_delta
-from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
-from mhs_llms.plotting import get_provider_color
+from rating_raters.facets.order_effect_plot import load_order_shift_comparison, load_pooled_order_delta
+from rating_raters.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
+from rating_raters.plotting import get_provider_color
 
 
 ORIGINAL_JUDGES_PATH = FACETS_DIR / "full_run_models_reference_set" / "judges_scores.csv"

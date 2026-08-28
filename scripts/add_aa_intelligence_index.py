@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from mhs_llms.aa_index import add_aa_index
+from rating_raters.aa_index import add_aa_index
 
 
 def main() -> None:

@@ -11,9 +11,9 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from mhs_llms.labels import model_id_to_plot_label
-from mhs_llms.facets.postprocess import parse_facets_score_file
-from mhs_llms.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
+from rating_raters.labels import model_id_to_plot_label
+from rating_raters.facets.postprocess import parse_facets_score_file
+from rating_raters.paths import ARTIFACTS_DIR, DATA_DIR, FACETS_DIR
 
 
 MODEL_ORDER = [

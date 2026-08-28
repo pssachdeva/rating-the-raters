@@ -7,8 +7,8 @@ from mpl_lego.labels import bold_text, fix_labels_for_tex_style
 from mpl_lego.style import use_latex_style
 import pandas as pd
 
-from mhs_llms.labels import infer_provider, model_id_to_plot_label
-from mhs_llms.plotting import build_gaussian_kde_curve, get_provider_color, save_figure
+from rating_raters.labels import infer_provider, model_id_to_plot_label
+from rating_raters.plotting import build_gaussian_kde_curve, get_provider_color, save_figure
 
 
 COMMENTS_SCORE_PATH = Path("facets/full_set_all_models_llm_only_recoded/comments_scores.csv")

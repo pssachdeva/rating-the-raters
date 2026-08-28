@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from mhs_llms.facets.target_drf import run_target_drf_facets
+from rating_raters.facets.target_drf import run_target_drf_facets
 
 
 def main() -> None:

@@ -5,8 +5,8 @@ from typing import Mapping
 
 import pandas as pd
 
-from mhs_llms.config import FacetsConfig
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.config import FacetsConfig
+from rating_raters.schema import ITEM_NAMES
 
 
 def build_facets_frame(dataframe: pd.DataFrame) -> pd.DataFrame:

@@ -7,7 +7,7 @@ from typing import Sequence
 
 from loguru import logger
 
-from mhs_llms.retry_direct import DirectRetryOutputs, retry_errored_requests
+from rating_raters.retry_direct import DirectRetryOutputs, retry_errored_requests
 
 
 def retry_direct_errors(

@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 from datasets import load_dataset
 
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.schema import ITEM_NAMES
 
 
 def load_mhs_dataframe(

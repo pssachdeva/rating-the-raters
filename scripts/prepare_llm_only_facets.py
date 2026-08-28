@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from mhs_llms.facets.llm_only import run_llm_only_facets
+from rating_raters.facets.llm_only import run_llm_only_facets
 
 
 def main() -> None:

@@ -11,8 +11,8 @@ from mpl_lego.labels import bold_text, fix_labels_for_tex_style
 import numpy as np
 import pandas as pd
 
-from mhs_llms.facets.postprocess import parse_facets_score_file
-from mhs_llms.labels import model_id_to_plot_label
+from rating_raters.facets.postprocess import parse_facets_score_file
+from rating_raters.labels import model_id_to_plot_label
 
 
 def load_human_item_difficulty_order(

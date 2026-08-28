@@ -6,11 +6,11 @@ from typing import Mapping
 
 import pandas as pd
 
-from mhs_llms.config import OrderEffectConfig, load_order_effect_config
-from mhs_llms.facets.anchored import _build_facets_judge_map, _prepare_llm_annotations
-from mhs_llms.facets.facets import _format_measure, write_facets_data, write_facets_spec
-from mhs_llms.facets.postprocess import load_measure_anchors, parse_facets_score_file
-from mhs_llms.schema import ITEM_NAMES
+from rating_raters.config import OrderEffectConfig, load_order_effect_config
+from rating_raters.facets.anchored import _build_facets_judge_map, _prepare_llm_annotations
+from rating_raters.facets.facets import _format_measure, write_facets_data, write_facets_spec
+from rating_raters.facets.postprocess import load_measure_anchors, parse_facets_score_file
+from rating_raters.schema import ITEM_NAMES
 
 
 ORIGINAL_ORDER_ID = "1"

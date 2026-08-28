@@ -3,8 +3,8 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-from mhs_llms.config import load_model_batch_config
-from mhs_llms.paths import REPO_ROOT
+from rating_raters.config import load_model_batch_config
+from rating_raters.paths import REPO_ROOT
 
 
 DEEPSEEK_V4_PRO_CACHE_HIT_PER_MTOK = 0.003625

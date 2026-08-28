@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from mhs_llms.facets import run_severity_decomposition_facets
+from rating_raters.facets import run_severity_decomposition_facets
 
 
 def main() -> None:

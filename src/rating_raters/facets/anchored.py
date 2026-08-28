@@ -5,12 +5,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from mhs_llms.config import load_llm_facets_config
-from mhs_llms.constants import FACETS_LLM_JUDGE_IDS, FACETS_LLM_JUDGE_ID_START, HUMAN_FACETS_RECODE_MAP
-from mhs_llms.facets.facets import build_facets_frame, build_facets_spec, write_facets_data, write_facets_spec
-from mhs_llms.facets.postprocess import load_measure_anchors
-from mhs_llms.schema import ITEM_NAMES, prompt_letter_to_hf_value
-from mhs_llms.utils import recode_responses
+from rating_raters.config import load_llm_facets_config
+from rating_raters.constants import FACETS_LLM_JUDGE_IDS, FACETS_LLM_JUDGE_ID_START, HUMAN_FACETS_RECODE_MAP
+from rating_raters.facets.facets import build_facets_frame, build_facets_spec, write_facets_data, write_facets_spec
+from rating_raters.facets.postprocess import load_measure_anchors
+from rating_raters.schema import ITEM_NAMES, prompt_letter_to_hf_value
+from rating_raters.utils import recode_responses
 
 
 @dataclass(frozen=True)

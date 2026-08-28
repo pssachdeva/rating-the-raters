@@ -4,9 +4,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from mhs_llms.aa_scatter import load_medium_effort_aa_severities, plot_aa_severity_scatter
-from mhs_llms.paths import ARTIFACTS_DIR
-from mhs_llms.plotting import apply_plot_style, save_figure
+from rating_raters.aa_scatter import load_medium_effort_aa_severities, plot_aa_severity_scatter
+from rating_raters.paths import ARTIFACTS_DIR
+from rating_raters.plotting import apply_plot_style, save_figure
 
 
 DATA_PATH = Path("data/reference_set_model_severities_latest.csv")

@@ -2,10 +2,10 @@
 
 import pandas as pd
 
-from mhs_llms.annotator_agreement import ITEM_DISPLAY_LABELS
-from mhs_llms.labels import provider_display_name
-from mhs_llms.schema import ITEM_NAMES
-from mhs_llms.score_distribution import align_item_responses
+from rating_raters.annotator_agreement import ITEM_DISPLAY_LABELS
+from rating_raters.labels import provider_display_name
+from rating_raters.schema import ITEM_NAMES
+from rating_raters.score_distribution import align_item_responses
 
 
 def select_black_woman_reference_comment(

@@ -4,7 +4,7 @@ from cycler import cycler
 import matplotlib.pyplot as plt
 from mpl_lego.style import use_latex_style
 
-from mhs_llms.hate_score_figure import (
+from rating_raters.hate_score_figure import (
     build_human_average_scores,
     build_model_comment_scores,
     load_model_annotation_files,
@@ -12,7 +12,7 @@ from mhs_llms.hate_score_figure import (
     reference_comment_ids,
     summarize_model_scores,
 )
-from mhs_llms.paths import ARTIFACTS_DIR, REPO_ROOT
+from rating_raters.paths import ARTIFACTS_DIR, REPO_ROOT
 
 
 MODEL_ANNOTATION_PATHS = [
