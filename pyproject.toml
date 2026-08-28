@@ -36,6 +36,3 @@ pythonpath = ["src"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/rating_raters"]
-
-[tool.uv.sources]
-mpl-lego = { path = "../mpl-lego", editable = true }

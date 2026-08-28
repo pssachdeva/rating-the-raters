@@ -1199,16 +1199,14 @@ wheels = [
 [[package]]
 name = "mpl-lego"
 version = "0.0.3"
-source = { editable = "../mpl-lego" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "matplotlib" },
-    { name = "numpy" },
+sdist = { url = "https://files.pythonhosted.org/packages/2f/c7/b3066eba265e4f468f5794af9e1b1114898d04db25d0186683a08bdf93b8/mpl_lego-0.0.3.tar.gz", hash = "sha256:fbe5c2cdb44b2720c9b558d4ea75314fc0d092551bc59d7d4d46ea86457a6d9a", size = 8737, upload-time = "2026-07-22T20:11:27.789Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/17/9ec9d9891cf812cf0f959e0ef0550df7d579dea7fb0e15c811f83c229522/mpl_lego-0.0.3-py3-none-any.whl", hash = "sha256:89314605b90be423294a3a12333eb09d321796b4d7a12ea18b4d0ae18fe60a01", size = 10594, upload-time = "2026-07-22T20:11:26.794Z" },
 ]
 
 [[package]]
@@ -2033,7 +2031,7 @@ requires-dist = [
     { name = "google-genai", specifier = ">=1.70.0" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "matplotlib", specifier = ">=3.10.8" },
-    { name = "mpl-lego", editable = "../mpl-lego" },
+    { name = "mpl-lego" },
     { name = "openai", specifier = ">=2.30.0" },
     { name = "pandas", specifier = ">=2.2.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
