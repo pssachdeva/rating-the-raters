@@ -4,6 +4,12 @@
   Pratik S. Sachdeva &nbsp;·&nbsp; Nathan Boudol<br>
   <strong>Empirical Methods in Natural Language Processing (EMNLP), 2026</strong>
 </p>
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2608.27463"><img src="https://img.shields.io/badge/arXiv-2608.27463-b31b1b.svg" alt="arXiv"></a>
+  <a href="https://huggingface.co/datasets/psachdeva/rating-the-raters"><img src="https://img.shields.io/badge/Hugging%20Face-Dataset-FFD21E.svg" alt="Hugging Face Dataset"></a>
+</p>
+
 LLMs now sit on every side of evaluation: as examinees scored on benchmarks, judges of other models' outputs, and raters of human-generated content. Each paradigm can be viewed as a measurement problem, where a latent property of an object is probed with items from an instrument (e.g., benchmark) by raters. Standard evaluation practices often neglect the contributions of each core component to the end result, limiting our understanding of what is being measured. Rasch measurement theory (RMT) is well-suited to this kind of problem. RMT decomposes ordinal ratings into separable facets on a common scale. It further provides a battery of diagnostics that can identify miscalibrated measurements and rater biases. We present a case study of RMT applied to the LLM-as-rater paradigm using the \textit{Measuring Hate Speech} corpus, whose construct was itself built under RMT. We fit a series of many-facet Rasch models to annotations from nine LLMs spanning families and capability levels. Our analyses show that LLMs systematically differ from human raters in severity, item-level calibration, question-order robustness, target-identity sensitivity, and rating scale use, which all would be obscured by standard evaluation practice. Overall, we argue that RMT belongs in the toolkit for evaluating LLM-as-examinee, -judge, and -rater paradigms.
 
 ## Setup
