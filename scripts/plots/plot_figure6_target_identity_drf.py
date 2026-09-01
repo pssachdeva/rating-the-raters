@@ -1,4 +1,4 @@
-"""Plot target-identity DRF odds multipliers as a model-by-identity heatmap."""
+"""Plot Figure 6 target-identity DRF odds multipliers as a heatmap."""
 
 from pathlib import Path
 import math
@@ -81,9 +81,10 @@ TARGET_LABELS = {
 }
 TARGET_ORDER = [target_id for targets in IDENTITY_GROUPS.values() for target_id, _ in targets]
 
-OUTPUT_PATH = ARTIFACTS_DIR / "figure4_target_drf_heatmap.pdf"
+OUTPUT_PATH = ARTIFACTS_DIR / "figure6_target_identity_drf.pdf"
 FIGSIZE = (8.8, 4.2)
 DPI = 300
+SAVE_PAD_INCHES = 0.08
 COLOR_CYCLE = [
     "#0072B2",
     "#D55E00",
@@ -119,8 +120,10 @@ SIGNIFICANCE_MARKER_SIZE = 8.0
 SIGNIFICANCE_MARKER_COLOR = "#FFFFFF"
 SIGNIFICANCE_STROKE_COLOR = "#111111"
 SIGNIFICANCE_STROKE_WIDTH = 0.65
+SIGNIFICANCE_ZORDER = 4
 HEATMAP_COLORS = ["#C43C32", "#FFFFFF", "#000000"]
 BAD_COLOR = "#FFFFFF"
+GROUP_LABEL_COLOR = "#333333"
 X_LABEL_ROTATION = 30
 X_LABEL_PAD = 0
 COLORBAR_LABEL = r"Odds multiplier $\exp(\beta_{jm})$"
@@ -154,7 +157,7 @@ def main() -> None:
     add_colorbar(figure, axis, heatmap)
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(OUTPUT_PATH, dpi=DPI, bbox_inches="tight", pad_inches=0.08)
+    figure.savefig(OUTPUT_PATH, dpi=DPI, bbox_inches="tight", pad_inches=SAVE_PAD_INCHES)
     plt.close(figure)
     print(f"output={OUTPUT_PATH.resolve()}")
 
@@ -346,7 +349,7 @@ def add_significance_markers(
             va="center",
             fontsize=SIGNIFICANCE_MARKER_SIZE,
             color=SIGNIFICANCE_MARKER_COLOR,
-            zorder=4,
+            zorder=SIGNIFICANCE_ZORDER,
         )
         marker_text.set_path_effects(
             [
@@ -372,7 +375,7 @@ def add_group_labels(axis: plt.Axes, x_layout: pd.DataFrame) -> None:
             ha="center",
             va="bottom",
             fontsize=GROUP_LABEL_SIZE,
-            color="#333333",
+            color=GROUP_LABEL_COLOR,
             clip_on=False,
         )
 

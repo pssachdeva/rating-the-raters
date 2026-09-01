@@ -1,3 +1,5 @@
+"""Plot Figure 2 diagnostics for LLM rating-scale category functioning."""
+
 from pathlib import Path
 import re
 
@@ -11,13 +13,14 @@ from rating_raters.plotting import save_figure
 
 
 FACETS_OUTPUT_PATH = Path("facets/full_set_all_models_llm_only/full_set_all_models_llm_only_output.txt")
-OUTPUT_PNG_PATH = Path("artifacts/figure5_category_diagnostics.png")
-OUTPUT_PDF_PATH = Path("artifacts/figure5_category_diagnostics.pdf")
+OUTPUT_PNG_PATH = Path("artifacts/figure2_rating_scale_functioning.png")
+OUTPUT_PDF_PATH = Path("artifacts/figure2_rating_scale_functioning.pdf")
 
 FIGURE_SIZE = (3.05, 2.75)
 DPI = 300
 SAVE_DPI = 300
 SAVE_PAD_INCHES = 0.02
+TIGHT_LAYOUT_PAD = 0.35
 X_LIMITS = (-4.0, 4.0)
 X_TICKS = [-4, -2, 0, 2, 4]
 STEP_OFFSETS = {
@@ -28,15 +31,39 @@ STEP_OFFSETS = {
 }
 TICK_HALF_HEIGHT = 0.09
 CONNECTOR_LINE_WIDTH = 0.75
+CONNECTOR_ALPHA = 0.85
+CONNECTOR_ZORDER = 2
 THRESHOLD_LINE_WIDTH = 1.35
+THRESHOLD_ZORDER = 3
 ORDER_MARKER_SIZE = 15
+ORDER_MARKER_EDGE_COLOR = "none"
+ORDER_MARKER_ZORDER = 4
+ORDERED_MARKER = ">"
+DISORDERED_MARKER = "<"
 ZERO_LINE_WIDTH = 0.75
+ZERO_LINE_STYLE = "--"
+ZERO_LINE_ZORDER = 1
 GRID_LINE_WIDTH = 0.45
+GRID_ALPHA = 0.6
 AXIS_LINE_WIDTH = 0.7
-X_LABEL_SIZE = 8.0
+X_LABEL_SIZE = 9.0
 TICK_LABEL_SIZE = 7.0
-ITEM_LABEL_SIZE = 6.7
-LEGEND_LABEL_SIZE = 5.6
+ITEM_LABEL_SIZE = 8.0
+LEGEND_LABEL_SIZE = 7.0
+LEGEND_LOCATION = "lower center"
+LEGEND_BBOX_ANCHOR = (0.5, 1.01)
+LEGEND_N_COLUMNS = 2
+LEGEND_FRAME_ON = False
+LEGEND_HANDLE_LENGTH = 1.2
+LEGEND_HANDLE_TEXT_PAD = 0.25
+LEGEND_COLUMN_SPACING = 0.65
+LEGEND_BORDER_PAD = 0.1
+Y_TICK_LENGTH = 0
+Y_TICK_PAD = 2
+Y_LIMIT_BOTTOM = 0.45
+Y_LIMIT_TOP_PADDING = 0.55
+BAND_HALF_HEIGHT = 0.5
+BAND_ZORDER = 0
 THRESHOLD_COLOR = "#202020"
 ORDERED_COLOR = "#009E73"
 DISORDERED_COLOR = "#D55E00"
@@ -100,9 +127,9 @@ def main() -> None:
     format_axis(axis)
     add_legend(axis)
 
-    figure.tight_layout(pad=0.35)
-    save_figure(figure, OUTPUT_PNG_PATH, dpi=SAVE_DPI)
-    save_figure(figure, OUTPUT_PDF_PATH, dpi=SAVE_DPI)
+    figure.tight_layout(pad=TIGHT_LAYOUT_PAD)
+    save_figure(figure, OUTPUT_PNG_PATH, dpi=SAVE_DPI, pad_inches=SAVE_PAD_INCHES)
+    save_figure(figure, OUTPUT_PDF_PATH, dpi=SAVE_DPI, pad_inches=SAVE_PAD_INCHES)
 
 
 def parse_thresholds(path: Path) -> pd.DataFrame:
@@ -157,7 +184,7 @@ def plot_thresholds(axis: plt.Axes, thresholds: pd.DataFrame) -> None:
                 row.y + TICK_HALF_HEIGHT,
                 color=THRESHOLD_COLOR,
                 linewidth=THRESHOLD_LINE_WIDTH,
-                zorder=3,
+                zorder=THRESHOLD_ZORDER,
             )
         for previous_row, current_row in zip(threshold_rows, threshold_rows[1:], strict=False):
             plot_step_connector(axis, previous_row, current_row)
@@ -174,17 +201,17 @@ def plot_step_connector(axis: plt.Axes, previous_row: object, current_row: objec
         [start_y, end_y],
         color=CONNECTOR_COLOR,
         linewidth=CONNECTOR_LINE_WIDTH,
-        alpha=0.85,
-        zorder=2,
+        alpha=CONNECTOR_ALPHA,
+        zorder=CONNECTOR_ZORDER,
     )
     axis.scatter(
         [(previous_row.threshold + current_row.threshold) / 2.0],
         [(start_y + end_y) / 2.0],
-        marker=">" if is_ordered else "<",
+        marker=ORDERED_MARKER if is_ordered else DISORDERED_MARKER,
         s=ORDER_MARKER_SIZE,
         color=ORDERED_COLOR if is_ordered else DISORDERED_COLOR,
-        edgecolor="none",
-        zorder=4,
+        edgecolor=ORDER_MARKER_EDGE_COLOR,
+        zorder=ORDER_MARKER_ZORDER,
     )
 
 
@@ -199,10 +226,16 @@ def format_axis(axis: plt.Axes) -> None:
 
     y_positions = item_y_positions()
     add_row_banding(axis, y_positions)
-    axis.axvline(0.0, color=ZERO_COLOR, linewidth=ZERO_LINE_WIDTH, linestyle="--", zorder=1)
+    axis.axvline(
+        0.0,
+        color=ZERO_COLOR,
+        linewidth=ZERO_LINE_WIDTH,
+        linestyle=ZERO_LINE_STYLE,
+        zorder=ZERO_LINE_ZORDER,
+    )
     axis.set_xlim(*X_LIMITS)
     axis.set_xticks(X_TICKS)
-    axis.set_ylim(0.45, len(ITEM_ORDER) + 0.55)
+    axis.set_ylim(Y_LIMIT_BOTTOM, len(ITEM_ORDER) + Y_LIMIT_TOP_PADDING)
     axis.set_yticks([y_positions[item] for item in ITEM_ORDER])
     axis.set_yticklabels(
         [fix_labels_for_tex_style(ITEM_LABELS[item]) for item in ITEM_ORDER],
@@ -210,8 +243,8 @@ def format_axis(axis: plt.Axes) -> None:
     )
     axis.set_xlabel(bold_text(X_LABEL), fontsize=X_LABEL_SIZE)
     axis.tick_params(axis="x", labelsize=TICK_LABEL_SIZE, width=AXIS_LINE_WIDTH)
-    axis.tick_params(axis="y", length=0, pad=2)
-    axis.grid(axis="x", color=GRID_COLOR, alpha=0.6, linewidth=GRID_LINE_WIDTH)
+    axis.tick_params(axis="y", length=Y_TICK_LENGTH, pad=Y_TICK_PAD)
+    axis.grid(axis="x", color=GRID_COLOR, alpha=GRID_ALPHA, linewidth=GRID_LINE_WIDTH)
     for spine in ("top", "right", "left"):
         axis.spines[spine].set_visible(False)
     axis.spines["bottom"].set_linewidth(AXIS_LINE_WIDTH)
@@ -224,26 +257,33 @@ def add_row_banding(axis: plt.Axes, y_positions: dict[str, int]) -> None:
         if index % 2:
             continue
         y_position = y_positions[item]
-        axis.axhspan(y_position - 0.5, y_position + 0.5, color=BAND_COLOR, zorder=0)
+        axis.axhspan(
+            y_position - BAND_HALF_HEIGHT,
+            y_position + BAND_HALF_HEIGHT,
+            color=BAND_COLOR,
+            zorder=BAND_ZORDER,
+        )
 
 
 def add_legend(axis: plt.Axes) -> None:
     """Add a compact legend explaining disordered threshold steps."""
 
-    ordered = axis.scatter([], [], marker=">", s=ORDER_MARKER_SIZE, color=ORDERED_COLOR)
-    disordered = axis.scatter([], [], marker="<", s=ORDER_MARKER_SIZE, color=DISORDERED_COLOR)
+    ordered = axis.scatter([], [], marker=ORDERED_MARKER, s=ORDER_MARKER_SIZE, color=ORDERED_COLOR)
+    disordered = axis.scatter(
+        [], [], marker=DISORDERED_MARKER, s=ORDER_MARKER_SIZE, color=DISORDERED_COLOR
+    )
     axis.legend(
         [ordered, disordered],
         [bold_text(ORDERED_LABEL), bold_text(DISORDERED_LABEL)],
-        loc="lower center",
-        bbox_to_anchor=(0.5, 1.01),
-        ncol=2,
-        frameon=False,
+        loc=LEGEND_LOCATION,
+        bbox_to_anchor=LEGEND_BBOX_ANCHOR,
+        ncol=LEGEND_N_COLUMNS,
+        frameon=LEGEND_FRAME_ON,
         fontsize=LEGEND_LABEL_SIZE,
-        handlelength=1.2,
-        handletextpad=0.25,
-        columnspacing=0.65,
-        borderpad=0.1,
+        handlelength=LEGEND_HANDLE_LENGTH,
+        handletextpad=LEGEND_HANDLE_TEXT_PAD,
+        columnspacing=LEGEND_COLUMN_SPACING,
+        borderpad=LEGEND_BORDER_PAD,
     )
 
 

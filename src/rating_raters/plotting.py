@@ -48,11 +48,16 @@ def get_provider_color(provider_name: str) -> str:
     return PROVIDER_COLORS.get(provider_name, PROVIDER_COLORS["unknown"])
 
 
-def save_figure(figure: matplotlib.figure.Figure, output_path: Path, dpi: int = 300) -> Path:
+def save_figure(
+    figure: matplotlib.figure.Figure,
+    output_path: Path,
+    dpi: int = 300,
+    pad_inches: float = 0.1,
+) -> Path:
     """Write one figure to disk and return the resolved output path."""
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(output_path, dpi=dpi, bbox_inches="tight")
+    figure.savefig(output_path, dpi=dpi, bbox_inches="tight", pad_inches=pad_inches)
     return output_path
 
 

@@ -1,4 +1,4 @@
-"""Generate Figure 3: item-order severity shifts."""
+"""Generate Figure 5: question-order differential rater functioning."""
 
 from pathlib import Path
 import math
@@ -18,7 +18,7 @@ from rating_raters.plotting import get_provider_color
 ORIGINAL_JUDGES_PATH = FACETS_DIR / "full_run_models_reference_set" / "judges_scores.csv"
 REVERSE_JUDGES_PATH = FACETS_DIR / "question_order_full_run_reverse_matched" / "judges_scores.csv"
 POOLED_ORDER_CONTRAST_PATH = DATA_DIR / "question_order_full_run_pooled_effect_order_contrast.csv"
-OUTPUT_PATH = ARTIFACTS_DIR / "figure3_item_order_severity_shift.pdf"
+OUTPUT_PATH = ARTIFACTS_DIR / "figure5_question_order_drf.pdf"
 
 COLOR_CYCLE = [
     "#0072B2",
@@ -40,8 +40,8 @@ DPI = 300
 SAVE_PAD_INCHES = 0.02
 
 MARKER_FORMAT = "o"
-SEVERITY_CONDITION_Y_OFFSET = 0.13
-SEVERITY_MARKER_SIZE = 6.4
+SEVERITY_CONDITION_Y_OFFSET = 0.20
+SEVERITY_MARKER_SIZE = 8.
 SEVERITY_ERROR_COLOR = "#303030"
 SEVERITY_ERROR_CAPSIZE = 2.5
 SEVERITY_MARKER_EDGE_WIDTH = 1.3
@@ -53,9 +53,9 @@ SEVERITY_NULL_LINE_COLOR = "#888888"
 SEVERITY_NULL_LINE_WIDTH = 1.0
 SEVERITY_NULL_LINE_STYLE = "-"
 SEVERITY_XLABEL = r"Severity ($\alpha_j$)"
-SEVERITY_XLABEL_SIZE = 11
+SEVERITY_XLABEL_SIZE = 16
 
-ODDS_RATIO_MARKER_SIZE = 5.8
+ODDS_RATIO_MARKER_SIZE = 8.5
 ODDS_RATIO_ERROR_COLOR = "#303030"
 ODDS_RATIO_ERROR_CAPSIZE = 2.8
 ODDS_RATIO_MARKER_EDGE_COLOR = "white"
@@ -65,7 +65,7 @@ ODDS_RATIO_NULL_VALUE = 1.0
 ODDS_RATIO_NULL_LINE_COLOR = "#444444"
 ODDS_RATIO_NULL_LINE_WIDTH = 1.0
 ODDS_RATIO_XLABEL = "Change in Odds Ratio"
-ODDS_RATIO_XLABEL_SIZE = 11
+ODDS_RATIO_XLABEL_SIZE = 16
 ODDS_RATIO_X_LIMITS = (0.7, 2.2)
 ODDS_RATIO_X_SCALE = "log"
 
@@ -88,8 +88,8 @@ RIGHT_Y_TICKS_VISIBLE = False
 
 GRID_AXIS = "x"
 GRID_ALPHA = 0.18
-X_TICK_LABEL_SIZE = 10
-Y_TICK_LABEL_SIZE = 10
+X_TICK_LABEL_SIZE = 14
+Y_TICK_LABEL_SIZE = 15
 EMPTY_Y_TICK_LABEL = ""
 
 PANEL_A_LABEL = "a"
@@ -97,15 +97,15 @@ PANEL_B_LABEL = "b"
 PANEL_A_LABEL_X = -0.05
 PANEL_B_LABEL_X = -0.08
 PANEL_LABEL_Y = 1.02
-SUBPLOT_LABEL_SIZE = 13
+SUBPLOT_LABEL_SIZE = 16
 SUBPLOT_LABEL_HORIZONTAL_ALIGNMENT = "left"
 SUBPLOT_LABEL_VERTICAL_ALIGNMENT = "bottom"
 DIRECTION_LEFT_LABEL = "Reversal Lowers\nHate Threshold"
 DIRECTION_RIGHT_LABEL = "Reversal Raises\nHate Threshold"
 DIRECTION_LEFT_X = 0.01
 DIRECTION_RIGHT_X = 0.99
-DIRECTION_LABEL_Y = 1.09
-DIRECTION_LABEL_SIZE = 9
+DIRECTION_LABEL_Y = 1.12
+DIRECTION_LABEL_SIZE = 11
 DIRECTION_LEFT_HORIZONTAL_ALIGNMENT = "left"
 DIRECTION_RIGHT_HORIZONTAL_ALIGNMENT = "right"
 DIRECTION_VERTICAL_ALIGNMENT = "top"
@@ -117,7 +117,7 @@ LEGEND_LINE_COORDINATES = [0]
 LEGEND_LINE_COLOR = "none"
 LEGEND_MARKER_SCALE = 1.25
 LEGEND_LOCATION = "upper left"
-LEGEND_FONT_SIZE = 10
+LEGEND_FONT_SIZE = 14
 LEGEND_FRAME_ON = True
 
 RIGHT_TICK_VALUES = [0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
@@ -142,7 +142,7 @@ SIGNIFICANCE_P10_THRESHOLD = 0.1
 
 
 def main() -> None:
-    """Build and save the Figure 3 item-order severity shift plot."""
+    """Build and save the Figure 5 question-order DRF plot."""
 
     use_latex_style()
     plt.rcParams["axes.prop_cycle"] = cycler(color=COLOR_CYCLE)

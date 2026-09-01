@@ -1,9 +1,10 @@
+"""Plot Figure 1 comparing the LLM-only and human-only measurement scales."""
+
 from pathlib import Path
 
 from cycler import cycler
 import matplotlib.pyplot as plt
 from matplotlib.legend import Legend
-from matplotlib.lines import Line2D
 from mpl_lego.labels import bold_text, fix_labels_for_tex_style
 from mpl_lego.style import use_latex_style
 import pandas as pd
@@ -16,13 +17,15 @@ COMMENTS_SCORE_PATH = Path("facets/full_set_all_models_llm_only_recoded/comments
 JUDGES_SCORE_PATH = Path("facets/full_set_all_models_llm_only_recoded/judges_scores.csv")
 LLM_ITEMS_SCORE_PATH = Path("facets/full_set_all_models_llm_only_recoded/items_scores.csv")
 HUMAN_ITEMS_SCORE_PATH = Path("facets/human_baseline/items_scores.csv")
-OUTPUT_PNG_PATH = Path("artifacts/figure6_wright_map.png")
-OUTPUT_PDF_PATH = Path("artifacts/figure6_wright_map.pdf")
+OUTPUT_PNG_PATH = Path("artifacts/figure1_scale_comparison.png")
+OUTPUT_PDF_PATH = Path("artifacts/figure1_scale_comparison.pdf")
 
-FIGURE_SIZE = (7.8, 4.1)
+FIGURE_SIZE = (8.0, 2.2)
 DPI = 300
 SAVE_DPI = 300
 SAVE_PAD_INCHES = 0.06
+TIGHT_LAYOUT_PAD = 0.4
+TIGHT_LAYOUT_RECT = (0.0, 0.0, 0.81, 1.0)
 X_LIMITS = (-6.5, 6.0)
 Y_LIMITS = (2.85, 4.5)
 KDE_POINTS = 700
@@ -38,43 +41,50 @@ MODEL_MARKER_OVERRIDES = {
     "GPT-5.4": "D",
 }
 KDE_LINE_WIDTH = 1.7
-ZERO_LINE_WIDTH = 0.85
-ZERO_LINE_Y_MIN = 3.0
-ZERO_LINE_Y_MAX = 4.50
+KDE_LINE_ZORDER = 2
+COMMENT_FILL_ALPHA = 0.38
+COMMENT_FILL_LINE_WIDTH = 0.0
+COMMENT_FILL_ZORDER = 1
+ZERO_LINE_WIDTH = 1.50
+ZERO_LINE_Y_MIN = X_AXIS_Y
+ZERO_LINE_Y_MAX = Y_LIMITS[1]
+ZERO_LINE_STYLE = "-"
+ZERO_LINE_ALPHA = 0.50
+ZERO_LINE_ZORDER = 1.5
 AXIS_LINE_WIDTH = 0.8
-ITEM_LABEL_SIZE = 10.0
+ITEM_LABEL_SIZE = 9.0
 X_TICK_LABEL_SIZE = 7.5
+SHOW_X_TICK_LABELS = False
 SHOW_Y_TICKS = False
 Y_TICK_STEP = 0.25
 Y_TICK_LABEL_SIZE = 6.0
-LEGEND_LOC = "upper center"
-LEGEND_BBOX_ANCHOR = (0.94, 1.00)
+LEGEND_LOC = "center"
+LEGEND_BBOX_ANCHOR = (0.875, 0.50)
 LEGEND_N_COLUMNS = 1
-LEGEND_FRAME_ON = True
-LEGEND_FONT_SIZE = 10.0
-LEGEND_HANDLE_TEXT_PAD = 0.2
-LEGEND_COLUMN_SPACING = 0.45
-LEGEND_MARKER_SIZE = 26
+LEGEND_FRAME_ON = False
+LEGEND_FONT_SIZE = 9.0
+LEGEND_HANDLE_TEXT_PAD = 0.08
+LEGEND_LABEL_SPACING = 0.20
+LEGEND_COLUMN_SPACING = 0.35
+LEGEND_MARKER_SIZE = 20
+MODEL_MARKER_EDGE_COLOR = "white"
+MODEL_MARKER_EDGE_WIDTH = 0.8
+MODEL_MARKER_ZORDER = 5
 LEGEND_FACE_COLOR = "#F8FAFC"
 LEGEND_EDGE_COLOR = "#374151"
 LEGEND_FRAME_ALPHA = 0.98
 LEGEND_BORDER_WIDTH = 1.05
-ITEM_LEGEND_LOC = "lower right"
-ITEM_LEGEND_BBOX_ANCHOR = (1.015, 0.)
-ITEM_LEGEND_N_COLUMNS = 1
-ITEM_LEGEND_FRAME_ON = True
-ITEM_LEGEND_FONT_SIZE = 10.0
-ITEM_LEGEND_LINE_WIDTH = 2.0
-ITEM_LEGEND_HANDLE_LENGTH = 1.2
-ITEM_LEGEND_HANDLE_TEXT_PAD = 0.4
-ITEM_LEGEND_FACE_COLOR = "#F8FAFC"
-ITEM_LEGEND_EDGE_COLOR = "#374151"
-ITEM_LEGEND_FRAME_ALPHA = 0.98
-ITEM_LEGEND_BORDER_WIDTH = 1.05
-ITEM_LEGEND_LABELS = {
+SCALE_LABELS = {
     "llm": "LLM scale",
     "human": "Human scale",
 }
+SCALE_LABEL_X = 0.015
+LLM_SCALE_LABEL_Y_OFFSET = 0.60
+HUMAN_SCALE_LABEL_Y_OFFSET = 0.45
+SCALE_LABEL_FONT_SIZE = 9.0
+SCALE_LABEL_BOX_PAD = 0.25
+SCALE_LABEL_BOX_LINE_WIDTH = 0.9
+SCALE_LABEL_BOX_FACE_COLOR = "white"
 SENTIMENT_ITEM = "sentiment"
 MODEL_JITTER_PATTERN = [-2, 1, -1, 2, 0, -2, 1, -1, 2]
 MODEL_LABEL_OVERRIDES = {
@@ -103,8 +113,16 @@ ITEM_COLOR = "#202020"
 HUMAN_ITEM_COLOR = "#8B5E5A"
 BACKGROUND_COLOR = "#FFFFFF"
 GRID_COLOR = "#D1D5DB"
+GRID_ALPHA = 0.42
+GRID_LINE_WIDTH = 0.55
 ZERO_LINE_COLOR = "#9CA3AF"
-SHOW_ZERO_LINE = False
+SHOW_ZERO_LINE = True
+ITEM_CALLOUT_ZORDER = 4
+ITEM_ARROW_STYLE = "-|>"
+ITEM_ARROW_CONNECTION_STYLE = "angle,angleA=0,angleB=90,rad=0"
+ITEM_ARROW_MUTATION_SCALE = 6.0
+ITEM_ARROW_SHRINK_A = 2.0
+ITEM_ARROW_SHRINK_B = 2.0
 
 ITEM_LABELS = {
     "sentiment": "Sentiment",
@@ -124,17 +142,17 @@ LLM_ITEM_LABEL_LAYOUT = {
     "attack_defend": {"x": -2.50, "y": 3.60, "ha": "center", "va": "center"},
     "insult": {"x": -1.470, "y": 3.750, "ha": "center", "va": "center"},
     "status": {"x": -0.800, "y": 3.95, "ha": "center", "va": "center"},
-    "hate_speech": {"x": 0.20, "y": 3.80, "ha": "center", "va": "center"},
-    "humiliate": {"x": 0.13, "y": 3.650, "ha": "center", "va": "center"},
+    "hate_speech": {"x": 0.50, "y": 3.80, "ha": "center", "va": "center"},
+    "humiliate": {"x": 0.13, "y": 3.680, "ha": "center", "va": "center"},
     "dehumanize": {"x": 2.340, "y": 3.700, "ha": "center", "va": "center"},
-    "violence": {"x": 3.680, "y": 3.63, "ha": "center", "va": "center"},
-    "genocide": {"x": 5.410, "y": 3.650, "ha": "center", "va": "center"},
+    "violence": {"x": 3.680, "y": 4.00, "ha": "center", "va": "center"},
+    "genocide": {"x": 5.410, "y": 3.70, "ha": "center", "va": "center"},
 }
 HUMAN_ITEM_LABEL_LAYOUT = {
     "sentiment": {"x": -4.25, "y": 3.30, "ha": "center", "va": "center"},
     "respect": {"x": -3.14, "y": 3.20, "ha": "center", "va": "center"},
     "attack_defend": {"x": -2.750, "y": 3.100, "ha": "center", "va": "center"},
-    "insult": {"x": -1.820, "y": 2.9500, "ha": "center", "va": "center"},
+    "insult": {"x": -1.820, "y": 2.9800, "ha": "center", "va": "center"},
     "status": {"x": -0.80, "y": 3.250, "ha": "center", "va": "center"},
     "dehumanize": {"x": -2, "y": 2.850, "ha": "center", "va": "center"},
     "humiliate": {"x": 0.800, "y": 2.85, "ha": "center", "va": "center"},
@@ -167,11 +185,12 @@ def main() -> None:
         human_items=human_items,
     )
     format_axis(axis, x_min, x_max)
-    add_legend(axis)
+    add_legend(figure, axis)
+    add_scale_labels(axis)
 
-    figure.tight_layout(pad=0.4)
-    save_figure(figure, OUTPUT_PNG_PATH, dpi=SAVE_DPI)
-    save_figure(figure, OUTPUT_PDF_PATH, dpi=SAVE_DPI)
+    figure.tight_layout(rect=TIGHT_LAYOUT_RECT, pad=TIGHT_LAYOUT_PAD)
+    save_figure(figure, OUTPUT_PNG_PATH, dpi=SAVE_DPI, pad_inches=SAVE_PAD_INCHES)
+    save_figure(figure, OUTPUT_PDF_PATH, dpi=SAVE_DPI, pad_inches=SAVE_PAD_INCHES)
 
 
 def load_score_table(path: Path) -> pd.DataFrame:
@@ -253,11 +272,17 @@ def plot_comment_distribution(
         [KDE_BASE_Y] * len(x_values),
         scaled_density,
         color=COMMENT_FILL_COLOR,
-        alpha=0.38,
-        linewidth=0.0,
-        zorder=1,
+        alpha=COMMENT_FILL_ALPHA,
+        linewidth=COMMENT_FILL_LINE_WIDTH,
+        zorder=COMMENT_FILL_ZORDER,
     )
-    axis.plot(x_values, scaled_density, color=COMMENT_LINE_COLOR, linewidth=KDE_LINE_WIDTH, zorder=2)
+    axis.plot(
+        x_values,
+        scaled_density,
+        color=COMMENT_LINE_COLOR,
+        linewidth=KDE_LINE_WIDTH,
+        zorder=KDE_LINE_ZORDER,
+    )
 
 
 def plot_model_markers(axis: plt.Axes, model_scores: pd.DataFrame) -> None:
@@ -272,9 +297,9 @@ def plot_model_markers(axis: plt.Axes, model_scores: pd.DataFrame) -> None:
             s=MODEL_MARKER_SIZE,
             marker=MODEL_MARKER_OVERRIDES.get(row.plot_label, DEFAULT_MODEL_MARKER),
             color=color,
-            edgecolor="white",
-            linewidth=0.8,
-            zorder=5,
+            edgecolor=MODEL_MARKER_EDGE_COLOR,
+            linewidth=MODEL_MARKER_EDGE_WIDTH,
+            zorder=MODEL_MARKER_ZORDER,
             label=row.plot_label,
         )
 
@@ -320,15 +345,15 @@ def plot_item_callouts(
             fontsize=ITEM_LABEL_SIZE,
             color=color,
             arrowprops={
-                "arrowstyle": "-|>",
+                "arrowstyle": ITEM_ARROW_STYLE,
                 "color": color,
                 "linewidth": ITEM_CALLOUT_LINE_WIDTH,
-                "connectionstyle": "angle,angleA=0,angleB=90,rad=0",
-                "mutation_scale": 5.0,
-                "shrinkA": 2.0,
-                "shrinkB": 2.0,
+                "connectionstyle": ITEM_ARROW_CONNECTION_STYLE,
+                "mutation_scale": ITEM_ARROW_MUTATION_SCALE,
+                "shrinkA": ITEM_ARROW_SHRINK_A,
+                "shrinkB": ITEM_ARROW_SHRINK_B,
             },
-            zorder=4,
+            zorder=ITEM_CALLOUT_ZORDER,
         )
 
 
@@ -342,8 +367,9 @@ def format_axis(axis: plt.Axes, x_min: float, x_max: float) -> None:
             ymax=ZERO_LINE_Y_MAX,
             color=ZERO_LINE_COLOR,
             linewidth=ZERO_LINE_WIDTH,
-            linestyle="--",
-            zorder=0,
+            linestyle=ZERO_LINE_STYLE,
+            alpha=ZERO_LINE_ALPHA,
+            zorder=ZERO_LINE_ZORDER,
         )
     axis.set_xlim(x_min, x_max)
     axis.set_ylim(*Y_LIMITS)
@@ -354,8 +380,18 @@ def format_axis(axis: plt.Axes, x_min: float, x_max: float) -> None:
         axis.tick_params(axis="y", labelsize=Y_TICK_LABEL_SIZE, width=AXIS_LINE_WIDTH)
     else:
         axis.set_yticks([])
-    axis.tick_params(axis="x", labelsize=X_TICK_LABEL_SIZE, width=AXIS_LINE_WIDTH)
-    axis.grid(axis="both" if SHOW_Y_TICKS else "x", color=GRID_COLOR, alpha=0.42, linewidth=0.55)
+    axis.tick_params(
+        axis="x",
+        labelbottom=SHOW_X_TICK_LABELS,
+        labelsize=X_TICK_LABEL_SIZE,
+        width=AXIS_LINE_WIDTH,
+    )
+    axis.grid(
+        axis="both" if SHOW_Y_TICKS else "x",
+        color=GRID_COLOR,
+        alpha=GRID_ALPHA,
+        linewidth=GRID_LINE_WIDTH,
+    )
     for spine in ("left", "right", "top"):
         axis.spines[spine].set_visible(False)
     axis.spines["bottom"].set_position(("data", X_AXIS_Y))
@@ -373,22 +409,23 @@ def build_y_ticks(y_min: float, y_max: float, step: float) -> list[float]:
     return ticks
 
 
-def add_legend(axis: plt.Axes) -> None:
-    """Add model and item-scale legends."""
+def add_legend(figure: plt.Figure, axis: plt.Axes) -> None:
+    """Add the model legend."""
 
     handles, labels = axis.get_legend_handles_labels()
     unique: dict[str, object] = {}
     for handle, label in zip(handles, labels, strict=True):
         unique.setdefault(label, handle)
-    model_legend = axis.legend(
+    model_legend = figure.legend(
         unique.values(),
-        [fix_labels_for_tex_style(label) for label in unique.keys()],
+        [bold_text(fix_labels_for_tex_style(label)) for label in unique.keys()],
         loc=LEGEND_LOC,
         bbox_to_anchor=LEGEND_BBOX_ANCHOR,
         ncol=LEGEND_N_COLUMNS,
         frameon=LEGEND_FRAME_ON,
         fontsize=LEGEND_FONT_SIZE,
         handletextpad=LEGEND_HANDLE_TEXT_PAD,
+        labelspacing=LEGEND_LABEL_SPACING,
         columnspacing=LEGEND_COLUMN_SPACING,
     )
     for handle in model_legend.legend_handles:
@@ -400,32 +437,42 @@ def add_legend(axis: plt.Axes) -> None:
         alpha=LEGEND_FRAME_ALPHA,
         border_width=LEGEND_BORDER_WIDTH,
     )
-    axis.add_artist(model_legend)
 
-    item_handles = [
-        Line2D([0], [0], color=ITEM_COLOR, linewidth=ITEM_LEGEND_LINE_WIDTH),
-        Line2D([0], [0], color=HUMAN_ITEM_COLOR, linewidth=ITEM_LEGEND_LINE_WIDTH),
-    ]
-    item_legend = axis.legend(
-        item_handles,
-        [
-            bold_text(ITEM_LEGEND_LABELS["llm"]),
-            bold_text(ITEM_LEGEND_LABELS["human"]),
-        ],
-        loc=ITEM_LEGEND_LOC,
-        bbox_to_anchor=ITEM_LEGEND_BBOX_ANCHOR,
-        ncol=ITEM_LEGEND_N_COLUMNS,
-        frameon=ITEM_LEGEND_FRAME_ON,
-        fontsize=ITEM_LEGEND_FONT_SIZE,
-        handlelength=ITEM_LEGEND_HANDLE_LENGTH,
-        handletextpad=ITEM_LEGEND_HANDLE_TEXT_PAD,
+
+def add_scale_labels(axis: plt.Axes) -> None:
+    """Label the two scale halves symmetrically around the central axis."""
+
+    axis.text(
+        SCALE_LABEL_X,
+        X_AXIS_Y + LLM_SCALE_LABEL_Y_OFFSET,
+        bold_text(SCALE_LABELS["llm"]),
+        transform=axis.get_yaxis_transform(),
+        ha="left",
+        va="center",
+        fontsize=SCALE_LABEL_FONT_SIZE,
+        color=ITEM_COLOR,
+        bbox={
+            "boxstyle": f"round,pad={SCALE_LABEL_BOX_PAD}",
+            "facecolor": SCALE_LABEL_BOX_FACE_COLOR,
+            "edgecolor": ITEM_COLOR,
+            "linewidth": SCALE_LABEL_BOX_LINE_WIDTH,
+        },
     )
-    style_legend_frame(
-        item_legend,
-        face_color=ITEM_LEGEND_FACE_COLOR,
-        edge_color=ITEM_LEGEND_EDGE_COLOR,
-        alpha=ITEM_LEGEND_FRAME_ALPHA,
-        border_width=ITEM_LEGEND_BORDER_WIDTH,
+    axis.text(
+        SCALE_LABEL_X,
+        X_AXIS_Y - HUMAN_SCALE_LABEL_Y_OFFSET,
+        bold_text(SCALE_LABELS["human"]),
+        transform=axis.get_yaxis_transform(),
+        ha="left",
+        va="center",
+        fontsize=SCALE_LABEL_FONT_SIZE,
+        color=HUMAN_ITEM_COLOR,
+        bbox={
+            "boxstyle": f"round,pad={SCALE_LABEL_BOX_PAD}",
+            "facecolor": SCALE_LABEL_BOX_FACE_COLOR,
+            "edgecolor": HUMAN_ITEM_COLOR,
+            "linewidth": SCALE_LABEL_BOX_LINE_WIDTH,
+        },
     )
 
 

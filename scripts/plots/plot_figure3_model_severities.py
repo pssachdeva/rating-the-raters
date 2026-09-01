@@ -1,9 +1,11 @@
-"""Plot Figure 1 model severities with an AA Intelligence Index scatter panel."""
+"""Plot Figure 3 model severities with an AA Intelligence Index scatter panel."""
 
 from pathlib import Path
 
+from cycler import cycler
 import matplotlib.pyplot as plt
 from mpl_lego.labels import apply_subplot_labels
+from mpl_lego.style import use_latex_style
 import numpy as np
 import pandas as pd
 
@@ -12,7 +14,6 @@ from rating_raters.labels import infer_provider, model_id_to_plot_label, provide
 from rating_raters.paths import ARTIFACTS_DIR, FACETS_DIR
 from rating_raters.plotting import (
     PROVIDER_COLORS,
-    apply_plot_style,
     build_gaussian_kde_curve,
     format_plot_text,
     get_provider_color,
@@ -34,13 +35,15 @@ MODEL_IDS = [
 HUMAN_SCORE_PATH = FACETS_DIR / "human_baseline" / "human_facets_scores.2.txt"
 JUDGE_SCORE_PATHS = [FACETS_DIR / "full_run_models_reference_set" / "judges_scores.csv"]
 AA_SEVERITY_PATH = Path("data/reference_set_model_severities_latest.csv")
-OUTPUT_PATH = ARTIFACTS_DIR / "figure1_model_severities.pdf"
+OUTPUT_PATH = ARTIFACTS_DIR / "figure3_model_severities.pdf"
 
-FIGURE_WIDTH = 15.0
+FIGURE_WIDTH = 17.5
 FIGURE_HEIGHT = 5.3
 SAVE_DPI = 300
+SAVE_PAD_INCHES = 0.1
+COLOR_CYCLE = list(PROVIDER_COLORS.values())
 GRID_HEIGHT_RATIOS = [0.9, 1.9]
-GRID_WIDTH_RATIOS = [1.85, 1.55]
+GRID_WIDTH_RATIOS = [2.4, 1.8]
 GRID_HSPACE = 0.02
 GRID_WSPACE = 0.02
 
@@ -52,30 +55,36 @@ BAR_EDGE_WIDTH = 1.1
 ERROR_LINE_WIDTH = 1.3
 ERROR_CAP_SIZE = 3.2
 ERROR_COLOR = "#202020"
-BOTTOM_LABEL_FONT_SIZE = 10.0
-VALUE_LABEL_FONT_SIZE = 8.0
-LEFT_TICK_LABEL_SIZE = 10.0
-LEFT_AXIS_LABEL_SIZE = 12.0
+BOTTOM_LABEL_FONT_SIZE = 14.0
+VALUE_LABEL_FONT_SIZE = 12.0
+LEFT_TICK_LABEL_SIZE = 14.0
+LEFT_AXIS_LABEL_SIZE = 18.0
 MODEL_LABEL_PAD_FRACTION = 0.012
 VALUE_LABEL_PAD_FRACTION = 0.010
 
 HUMAN_DISTRIBUTION_COLOR = "#8CA2CF"
 HUMAN_DENSITY_LINE_WIDTH = 2.6
 HUMAN_DENSITY_FILL_ALPHA = 0.32
-HUMAN_MODEL_LINE_WIDTH = 1.6
+HUMAN_MODEL_LINE_WIDTH = 2.5
+HUMAN_MODEL_LINE_ALPHA = 1.0
+HUMAN_MODEL_LINE_STYLE = "--"
+HUMAN_MODEL_LINE_ZORDER = 3
 ZERO_LINE_COLOR = "#202020"
 ZERO_LINE_WIDTH = 1.1
+HUMAN_ZERO_LINE_ZORDER = 4
+MODEL_ZERO_LINE_COLOR = "#444444"
 LEFT_GRID_ALPHA = 0.18
-AXIS_BACKGROUND_COLOR = "#F7F7F7"
-HUMAN_Y_LABEL = "Human Annotator\nSeverity Density"
+AXIS_BACKGROUND_COLOR = "#FAFAFA"
+HUMAN_Y_LABEL = r"Density ($\alpha_j$)"
+HUMAN_Y_LABEL_SIZE = 17.0
 MODEL_Y_LABEL = "Models"
 MODEL_X_LABEL = "Severity"
 
 DIRECTION_LABEL_LEFT = "More Likely to\nLabel as Hateful"
 DIRECTION_LABEL_RIGHT = "Less Likely to\nLabel as Hateful"
-DIRECTION_LABEL_FONT_SIZE = 8.0
+DIRECTION_LABEL_FONT_SIZE = 14.0
 DIRECTION_LABEL_Y_POSITION = 0.95
-DIRECTION_LABEL_INSET_FRACTION = 0.10
+DIRECTION_LABEL_INSET_FRACTION = 0.13
 DIRECTION_LABEL_BOX = {
     "boxstyle": "round,pad=0.42,rounding_size=0.28",
     "facecolor": "white",
@@ -83,33 +92,37 @@ DIRECTION_LABEL_BOX = {
     "linewidth": 0.8,
     "alpha": 1,
 }
+DIRECTION_LABEL_COLOR = "#555555"
 
 AA_VARIANT_SUFFIXES = ("_minimal", "_low", "_medium", "_high", "_xhigh", "_none")
 AA_X_COLUMN = "aa_intelligence_index"
 AA_Y_COLUMN = "measure"
 AA_OTHER_PROVIDER_SLUGS = {"qwen", "xiaomi", "zai"}
-AA_MARKER_SIZE = 38.0
+AA_MARKER_SIZE = 130.0
 AA_MARKER_ALPHA = 0.82
 AA_MARKER_EDGE_COLOR = "#222222"
-AA_MARKER_EDGE_WIDTH = 0.45
+AA_MARKER_EDGE_WIDTH = 0.15
 AA_TREND_COLOR = "#222222"
-AA_TREND_LINE_WIDTH = 1.4
+AA_TREND_LINE_WIDTH = 1.8
 AA_ZERO_LINE_COLOR = "#777777"
 AA_ZERO_LINE_WIDTH = 0.8
 AA_ZERO_LINE_ALPHA = 0.55
 AA_GRID_ALPHA = 0.22
-AA_GRID_LINE_WIDTH = 0.7
-AA_LEGEND_FONT_SIZE = 10.0
-AA_LEGEND_LOCATION = "lower right"
-AA_LEGEND_COLUMNS = 3
+AA_GRID_LINE_WIDTH = 0.9
+AA_LEGEND_FONT_SIZE = 14.0
+AA_LEGEND_LOCATION = "center left"
+AA_LEGEND_BBOX_ANCHOR = (1.03, 0.5)
+AA_LEGEND_COLUMNS = 1
 AA_LEGEND_HANDLE_TEXT_PAD = 0.35
 AA_LEGEND_COLUMN_SPACING = 0.8
 AA_LEGEND_FRAME_ON = True
-AA_AXIS_LABEL_SIZE = 12.0
-AA_TICK_LABEL_SIZE = 10.0
+AA_AXIS_LABEL_SIZE = 18.0
+AA_TICK_LABEL_SIZE = 14.0
 AA_X_LABEL = "AA Intelligence Index"
 AA_Y_LABEL = r"Severity ($\alpha_j$)"
 AA_BOX_ASPECT = 1.0
+AA_ZERO_LINE_ZORDER = 0
+AA_TREND_POINT_COUNT = 100
 AA_PROVIDER_ORDER = [
     "anthropic",
     "deepseek",
@@ -121,7 +134,7 @@ AA_PROVIDER_ORDER = [
     "xai",
     "other",
 ]
-SUBPLOT_LABEL_FONT_SIZE = 14.0
+SUBPLOT_LABEL_FONT_SIZE = 20.0
 SUBPLOT_LABEL_A_X = -0.03
 SUBPLOT_LABEL_B_X = 0.05
 SUBPLOT_LABEL_Y = 1.06
@@ -130,8 +143,9 @@ SUBPLOT_LABEL_VERTICAL_ALIGNMENT = "top"
 
 
 def main() -> None:
-    """Build and save the Figure 1 model severity plot."""
-    apply_plot_style()
+    """Build and save the Figure 3 model severity plot."""
+    use_latex_style()
+    plt.rcParams["axes.prop_cycle"] = cycler(color=COLOR_CYCLE)
 
     human_severity_frame = load_human_judge_severities(HUMAN_SCORE_PATH)
     model_severity_frame = load_model_judge_severities(JUDGE_SCORE_PATHS)
@@ -139,7 +153,7 @@ def main() -> None:
     aa_severity_frame = load_medium_effort_aa_severities(AA_SEVERITY_PATH)
 
     figure = build_figure(human_severity_frame, model_severity_frame, aa_severity_frame)
-    output_path = save_figure(figure, OUTPUT_PATH, dpi=SAVE_DPI)
+    output_path = save_figure(figure, OUTPUT_PATH, dpi=SAVE_DPI, pad_inches=SAVE_PAD_INCHES)
     plt.close(figure)
 
     print(f"output={output_path.resolve()}")
@@ -151,7 +165,7 @@ def build_figure(
     model_severity_frame: pd.DataFrame,
     aa_severity_frame: pd.DataFrame,
 ) -> plt.Figure:
-    """Build the complete Figure 1 layout with severity and AA scatter panels."""
+    """Build the complete Figure 3 layout with severity and AA scatter panels."""
     plot_min, plot_max = build_severity_plot_bounds(human_severity_frame, model_severity_frame)
     human_measures = human_severity_frame["measure"].astype(float).tolist()
     density_x, density_y = build_gaussian_kde_curve(human_measures, plot_min, plot_max)
@@ -341,13 +355,18 @@ def plot_human_density_panel(
             row.measure,
             color=get_provider_color(row.provider),
             linewidth=HUMAN_MODEL_LINE_WIDTH,
-            alpha=0.85,
-            linestyle="--",
-            zorder=3,
+            alpha=HUMAN_MODEL_LINE_ALPHA,
+            linestyle=HUMAN_MODEL_LINE_STYLE,
+            zorder=HUMAN_MODEL_LINE_ZORDER,
         )
 
-    axis.axvline(0.0, color=ZERO_LINE_COLOR, linewidth=ZERO_LINE_WIDTH, zorder=4)
-    axis.set_ylabel(format_plot_text(HUMAN_Y_LABEL), fontsize=LEFT_TICK_LABEL_SIZE)
+    axis.axvline(
+        0.0,
+        color=ZERO_LINE_COLOR,
+        linewidth=ZERO_LINE_WIDTH,
+        zorder=HUMAN_ZERO_LINE_ZORDER,
+    )
+    axis.set_ylabel(format_plot_text(HUMAN_Y_LABEL), fontsize=HUMAN_Y_LABEL_SIZE)
     axis.set_xlim(*SEVERITY_X_LIMITS)
     axis.set_ylim(bottom=0.0)
     axis.grid(alpha=LEFT_GRID_ALPHA)
@@ -382,7 +401,7 @@ def plot_model_bar_panel(
     axis.tick_params(axis="x", labelsize=LEFT_TICK_LABEL_SIZE)
     axis.invert_yaxis()
     axis.set_ylim(len(model_severity_frame) - 0.1, -0.90)
-    axis.axvline(0.0, color="#444444", linewidth=ZERO_LINE_WIDTH)
+    axis.axvline(0.0, color=MODEL_ZERO_LINE_COLOR, linewidth=ZERO_LINE_WIDTH)
     axis.set_xlim(plot_min - SEVERITY_X_PADDING, plot_max + SEVERITY_X_PADDING)
     axis.set_xlabel(format_plot_text(MODEL_X_LABEL), fontsize=LEFT_AXIS_LABEL_SIZE)
     axis.set_ylabel(format_plot_text(MODEL_Y_LABEL), fontsize=LEFT_AXIS_LABEL_SIZE)
@@ -443,7 +462,7 @@ def add_direction_labels(axis: plt.Axes, plot_min: float, plot_max: float) -> No
         ha="center",
         va="top",
         fontsize=DIRECTION_LABEL_FONT_SIZE,
-        color="#555555",
+        color=DIRECTION_LABEL_COLOR,
         bbox=DIRECTION_LABEL_BOX,
     )
     axis.text(
@@ -454,7 +473,7 @@ def add_direction_labels(axis: plt.Axes, plot_min: float, plot_max: float) -> No
         ha="center",
         va="top",
         fontsize=DIRECTION_LABEL_FONT_SIZE,
-        color="#555555",
+        color=DIRECTION_LABEL_COLOR,
         bbox=DIRECTION_LABEL_BOX,
     )
 
@@ -474,7 +493,7 @@ def plot_aa_scatter_panel(axis: plt.Axes, data: pd.DataFrame) -> None:
             color=PROVIDER_COLORS.get(provider, PROVIDER_COLORS["unknown"]),
             edgecolor=AA_MARKER_EDGE_COLOR,
             linewidth=AA_MARKER_EDGE_WIDTH,
-            label=provider_data["scatter_provider_label"].iloc[0],
+            label=format_plot_text(provider_data["scatter_provider_label"].iloc[0]),
         )
 
     add_aa_trend_line(axis, data)
@@ -483,7 +502,7 @@ def plot_aa_scatter_panel(axis: plt.Axes, data: pd.DataFrame) -> None:
         color=AA_ZERO_LINE_COLOR,
         linewidth=AA_ZERO_LINE_WIDTH,
         alpha=AA_ZERO_LINE_ALPHA,
-        zorder=0,
+        zorder=AA_ZERO_LINE_ZORDER,
     )
     axis.set_xlabel(format_plot_text(AA_X_LABEL), fontsize=AA_AXIS_LABEL_SIZE)
     axis.set_ylabel(format_plot_text(AA_Y_LABEL), fontsize=AA_AXIS_LABEL_SIZE)
@@ -494,6 +513,7 @@ def plot_aa_scatter_panel(axis: plt.Axes, data: pd.DataFrame) -> None:
         frameon=AA_LEGEND_FRAME_ON,
         fontsize=AA_LEGEND_FONT_SIZE,
         loc=AA_LEGEND_LOCATION,
+        bbox_to_anchor=AA_LEGEND_BBOX_ANCHOR,
         ncol=AA_LEGEND_COLUMNS,
         handletextpad=AA_LEGEND_HANDLE_TEXT_PAD,
         columnspacing=AA_LEGEND_COLUMN_SPACING,
@@ -505,7 +525,7 @@ def add_aa_trend_line(axis: plt.Axes, data: pd.DataFrame) -> None:
     x_values = data[AA_X_COLUMN].to_numpy(dtype=float)
     y_values = data[AA_Y_COLUMN].to_numpy(dtype=float)
     slope, intercept = np.polyfit(x_values, y_values, deg=1)
-    line_x = np.linspace(x_values.min(), x_values.max(), 100)
+    line_x = np.linspace(x_values.min(), x_values.max(), AA_TREND_POINT_COUNT)
     axis.plot(line_x, slope * line_x + intercept, color=AA_TREND_COLOR, linewidth=AA_TREND_LINE_WIDTH)
 
 

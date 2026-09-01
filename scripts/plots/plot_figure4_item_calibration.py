@@ -1,4 +1,4 @@
-"""Build Figure 2: item-dependent severity decomposition heatmap."""
+"""Build Figure 4: item-dependent severity decomposition heatmap."""
 
 from cycler import cycler
 import matplotlib.pyplot as plt
@@ -60,7 +60,7 @@ HUMAN_ITEM_SCORE_PATH = FACETS_DIR / "human_baseline" / "human_facets_scores.3.t
 MODEL_SCORE_PATH = (
     FACETS_DIR / "full_run_models_reference_set" / "full_run_models_reference_set_scores.2.txt"
 )
-OUTPUT_PATH = ARTIFACTS_DIR / "figure2_severity_decomposition_heatmap.pdf"
+OUTPUT_PATH = ARTIFACTS_DIR / "figure4_item_calibration.pdf"
 
 FIGSIZE = (9.1, 4.8)
 DPI = 300
@@ -77,31 +77,31 @@ FIGURE_TOP_MARGIN = 0.96
 FIGURE_BOTTOM_MARGIN = 0.34
 COLORBAR_PAD = 0.02
 COLORBAR_FRACTION = 0.038
-COLORBAR_LABEL_PAD = 12.0
+COLORBAR_LABEL_PAD = 15.0
 COLORBAR_TOP_LABEL_Y = 1.03
 COLORBAR_BOTTOM_LABEL_Y = -0.03
 CELL_EDGE_COLOR = "white"
 CELL_EDGE_WIDTH = 0.7
-XTICK_LABEL_SIZE = 10.0
-YTICK_LABEL_SIZE = 10.0
-COLORBAR_LABEL_SIZE = 8.0
-COLORBAR_TICK_SIZE = 7.2
-COLORBAR_ENDPOINT_LABEL_SIZE = 9.0
+XTICK_LABEL_SIZE = 14.0
+YTICK_LABEL_SIZE = 15.0
+COLORBAR_LABEL_SIZE = 12.0
+COLORBAR_TICK_SIZE = 11.0
+COLORBAR_ENDPOINT_LABEL_SIZE = 14.0
 COLORBAR_TOP_LABEL = "More\nsevere\nthan expected"
 COLORBAR_BOTTOM_LABEL = "Less\nsevere\nthan expected"
-SIGNIFICANCE_MARKER_SIZE = 8.0
+SIGNIFICANCE_MARKER_SIZE = 12.0
 SIGNIFICANCE_MARKER_COLOR = "#FFFFFF"
 SIGNIFICANCE_STROKE_COLOR = "#111111"
-SIGNIFICANCE_STROKE_WIDTH = 0.65
+SIGNIFICANCE_STROKE_WIDTH = 0.80
 HEATMAP_COLORS = ["#C43C32", "#FFFFFF", "#000000"]
 BAD_COLOR = "#FFFFFF"
-X_LABEL_ROTATION = 32
-X_LABEL_PAD = 0
+X_LABEL_ROTATION = 25
+X_LABEL_PAD = 0.0
 COLORBAR_LABEL = "Item-dependent severity adjustment"
 
 
 def main() -> None:
-    """Build and save the Figure 2 severity decomposition heatmap."""
+    """Build and save the Figure 4 severity decomposition heatmap."""
 
     use_latex_style()
     plt.rcParams["axes.prop_cycle"] = cycler(color=COLOR_CYCLE)
